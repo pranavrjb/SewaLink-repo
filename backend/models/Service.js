@@ -10,8 +10,8 @@ const serviceSchema = new mongoose.Schema(
     location: { type: String, required: true },
     phone: { type: String, required: true },
     image: { type: String },
-    ratings: { type: Number, default: 0 }, // Average rating
-    reviewsCount: { type: Number, default: 0 }, // Total reviews
+    ratings: { type: Number, default: 0 }, 
+    reviewsCount: { type: Number, default: 0 }, 
   },
   { timestamps: true }
 );

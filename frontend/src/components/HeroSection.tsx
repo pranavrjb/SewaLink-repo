@@ -60,11 +60,11 @@ const HeroSection = () => {
               <p className="text-primary-foreground/70 text-sm">Service Providers</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-heading font-bold text-primary-foreground">15K+</p>
+              <p className="text-3xl md:text-4xl font-heading font-bold text-primary-foreground">10K+</p>
               <p className="text-primary-foreground/70 text-sm">Happy Customers</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-heading font-bold text-primary-foreground">4.9</p>
+              <p className="text-3xl md:text-4xl font-heading font-bold text-primary-foreground">4.5</p>
               <p className="text-primary-foreground/70 text-sm">Average Rating</p>
             </div>
           </div>

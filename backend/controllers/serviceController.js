@@ -1,9 +1,6 @@
 const Service = require("../models/Service");
 const Review = require("../models/Review");
 
-/* ===============================
-   Helper: Update service rating
-================================ */
 const updateServiceRating = async (serviceId) => {
   const reviews = await Review.find({ service: serviceId });
 
@@ -16,10 +13,6 @@ const updateServiceRating = async (serviceId) => {
     reviewsCount: ratingsCount,
   });
 };
-
-/* ===============================
-   Controllers
-================================ */
 
 // GET all services
 const getServices = async (req, res) => {
@@ -67,13 +60,10 @@ const deleteService = async (req, res) => {
   }
 };
 
-/* ===============================
-   EXPORTS (THIS IS CRITICAL)
-================================ */
 module.exports = {
   addService,
   getServices,
   getServiceById,
   deleteService,
-  updateServiceRating, // optional export
+  updateServiceRating, 
 };

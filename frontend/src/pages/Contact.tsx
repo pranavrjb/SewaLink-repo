@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Headphones, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { submitContactForm } from "@/services/contactApi";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -29,50 +30,68 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.category) {
+      toast({
+        title: "Error",
+        description: "Please select a category.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      await submitContactForm(formData);
 
-    toast({
-      title: "Message Sent!",
-      description: "We've received your message and will get back to you within 24 hours.",
-    });
+      toast({
+        title: "Message Sent!",
+        description: "We've received your message and will get back to you within 24 hours.",
+      });
 
-    setFormData({
-      name: "",
-      email: "",
-      subject: "",
-      category: "",
-      message: ""
-    });
-    setIsSubmitting(false);
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        category: "",
+        message: ""
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactInfo = [
     {
       icon: Mail,
       title: "Email Us",
-      details: "support@sewalink.com",
+      details: "support@sewalink.com.np",
       description: "We'll respond within 24 hours"
     },
     {
       icon: Phone,
       title: "Call Us",
-      details: "+1 (555) 123-4567",
+      details: "+977 9777222333",
       description: "Mon-Fri from 8am to 6pm"
     },
     {
       icon: MapPin,
       title: "Visit Us",
-      details: "123 Service Street",
-      description: "Tech Hub, City 12345"
+      details: "Basundhara, Kathmandu",
+      description: "Kathmandu, Nepal"
     },
     {
       icon: Clock,
       title: "Business Hours",
-      details: "Mon - Fri: 8am - 6pm",
-      description: "Weekend: 9am - 4pm"
+      details: "Mon - Fri: 9am - 6pm",
+      description: "Weekend: 10am - 2pm"
     }
   ];
 
@@ -115,24 +134,27 @@ const Contact = () => {
       <section className="py-12">
         <div className="container">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {contactInfo.map((info, index) => (
+            {contactInfo.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
               <Card key={index} className="border-border text-center">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <info.icon className="w-6 h-6 text-primary" />
+                    <IconComponent className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="text-lg font-heading font-semibold text-foreground mb-1">
-                    {info.title}
+                    {item.title}
                   </h3>
                   <p className="text-foreground font-medium mb-1">
-                    {info.details}
+                    {item.details}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {info.description}
+                    {item.description}
                   </p>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -239,25 +261,28 @@ const Contact = () => {
                 How Can We Help?
               </h2>
               
-              {supportOptions.map((option, index) => (
+              {supportOptions.map((supportOption, index) => {
+                const IconComponent = supportOption.icon;
+                return (
                 <Card key={index} className="border-border hover:border-primary/50 transition-colors cursor-pointer">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <option.icon className="w-5 h-5 text-primary" />
+                        <IconComponent className="w-5 h-5 text-primary" />
                       </div>
                       <div>
                         <h3 className="font-heading font-semibold text-foreground mb-1">
-                          {option.title}
+                          {supportOption.title}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {option.description}
+                          {supportOption.description}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
 
               <Card className="border-primary bg-primary/5">
                 <CardContent className="p-6">
@@ -278,7 +303,7 @@ const Contact = () => {
       </section>
 
       {/* Map Section */}
-      <section className="py-12">
+      {/* <section className="py-12">
         <div className="container">
           <Card className="border-border overflow-hidden">
             <div className="h-[400px] bg-muted flex items-center justify-center">
@@ -294,7 +319,7 @@ const Contact = () => {
             </div>
           </Card>
         </div>
-      </section>
+      </section> */}
 
       <Footer />
     </div>

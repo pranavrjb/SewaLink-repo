@@ -120,7 +120,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Earnings</p>
-                <p className="text-2xl font-heading font-bold text-foreground">$2,450</p>
+                <p className="text-2xl font-heading font-bold text-foreground">Rs.2,450</p>
               </div>
               <DollarSign className="w-8 h-8 text-primary" />
             </div>
@@ -170,7 +170,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-primary">{booking.time}</p>
-                    <p className="text-sm text-foreground">${booking.price}</p>
+                    <p className="text-sm text-foreground">Rs.{booking.price}</p>
                     <div className="flex gap-2 mt-2">
                       <Button size="sm" variant="outline">
                         Details
@@ -239,15 +239,15 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">This Week</span>
-                  <span className="font-semibold">$620</span>
+                  <span className="font-semibold">Rs.620</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">This Month</span>
-                  <span className="font-semibold">$2,450</span>
+                  <span className="font-semibold">Rs.2,450</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Pending</span>
-                  <span className="font-semibold text-accent">$170</span>
+                  <span className="font-semibold text-accent">Rs.170</span>
                 </div>
                 <Button className="w-full mt-4">
                   Withdraw Earnings

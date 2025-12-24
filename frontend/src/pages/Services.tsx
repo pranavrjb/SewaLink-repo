@@ -89,7 +89,7 @@ const ServiceCard = ({ service }: ServiceCardProps) => {
         <Button
           variant="outline"
           className="w-full"
-          onClick={() => navigate(`/providers?service=${service.id}`)}
+          onClick={() => navigate(`/providers?category=${encodeURIComponent(service.category)}`)}
         >
           Book Now
           <ArrowRight className="w-4 h-4" />
@@ -112,9 +112,7 @@ const Services = () => {
     const fetchServices = async () => {
       try {
         setIsLoading(true);
-        console.log("Fetching services from API...");
         const { services: apiServices } = await servicesApi.getServices();
-        console.log("Services fetched:", apiServices);
         
         const displayServices: DisplayService[] = apiServices.map((s) => ({
           id: s._id,
@@ -133,10 +131,9 @@ const Services = () => {
         const uniqueCategories = ["All", ...new Set(apiServices.map((s) => s.category))];
         setCategories(uniqueCategories);
       } catch (error) {
-        console.error("Failed to fetch services:", error);
         toast({
           title: "Connection Error",
-          description: "Cannot connect to backend. Make sure your server is running...",
+          description: "Cannot connect to backend. Make sure your server is running at localhost:5000 and you're viewing this locally, not in Lovable's preview.",
           variant: "destructive",
         });
       } finally {

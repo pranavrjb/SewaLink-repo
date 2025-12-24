@@ -97,7 +97,7 @@ const UserDashboard = ({ user }: UserDashboardProps) => {
               <div>
                 <p className="text-sm text-muted-foreground">Total Spent</p>
                 <p className="text-2xl font-heading font-bold text-foreground">
-                  ${isLoading ? "-" : totalSpent}
+                  Rs.{isLoading ? "-" : totalSpent}
                 </p>
               </div>
               <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-lg">
@@ -160,7 +160,7 @@ const UserDashboard = ({ user }: UserDashboardProps) => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-foreground">${booking.service?.price || 0}</p>
+                      <p className="font-semibold text-foreground">Rs.{booking.service?.price || 0}</p>
                       <span
                         className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
                           booking.status === "accepted"
@@ -210,7 +210,7 @@ const UserDashboard = ({ user }: UserDashboardProps) => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-foreground">${booking.service?.price || 0}</p>
+                      <p className="font-semibold text-foreground">Rs.{booking.service?.price || 0}</p>
                       <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
                         booking.status === "completed" 
                           ? "bg-green-500/10 text-green-600" 

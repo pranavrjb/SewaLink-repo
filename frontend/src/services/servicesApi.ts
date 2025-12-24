@@ -13,8 +13,8 @@ export interface Service {
     email: string;
     phone?: string;
   };
-  rating?: number;
-  reviewCount?: number;
+  rating?: number;      // mapped from backend ratings
+  reviewCount?: number; // mapped from backend reviewsCount
   createdAt: string;
   updatedAt: string;
 }
@@ -48,7 +48,13 @@ export const servicesApi = {
       if (filters?.limit) params.append("limit", filters.limit.toString());
 
       const { data } = await api.get(`/services?${params.toString()}`);
-      return data;
+      // Map backend ratings/reviewsCount to frontend
+      const mappedServices = data.map((s: any) => ({
+        ...s,
+        rating: s.ratings,
+        reviewCount: s.reviewsCount,
+      }));
+      return { services: mappedServices };
     } catch (error) {
       if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || "Failed to fetch services");
@@ -61,7 +67,13 @@ export const servicesApi = {
   getServiceById: async (serviceId: string): Promise<{ service: Service }> => {
     try {
       const { data } = await api.get(`/services/${serviceId}`);
-      return data;
+      return {
+        service: {
+          ...data,
+          rating: data.ratings,
+          reviewCount: data.reviewsCount,
+        },
+      };
     } catch (error) {
       if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || "Failed to fetch service");
@@ -70,55 +82,25 @@ export const servicesApi = {
     }
   },
 
-  // Get services by provider
-  getProviderServices: async (providerId: string): Promise<ServicesResponse> => {
-    try {
-      const { data } = await api.get(`/services/provider/${providerId}`);
-      return data;
-    } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || "Failed to fetch provider services");
-      }
-      throw new Error("Failed to fetch provider services");
-    }
-  },
-
-  // Get services by category
-  getServicesByCategory: async (category: string): Promise<ServicesResponse> => {
-    try {
-      const { data } = await api.get(`/services/category/${category}`);
-      return data;
-    } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || "Failed to fetch services");
-      }
-      throw new Error("Failed to fetch services");
-    }
-  },
-
   // Create a new service (provider only)
-  createService: async (serviceData: Omit<Service, "_id" | "provider" | "createdAt" | "updatedAt">): Promise<{ message: string; service: Service }> => {
+  createService: async (
+    serviceData: Omit<Service, "_id" | "provider" | "createdAt" | "updatedAt">
+  ): Promise<{ message: string; service: Service }> => {
     try {
-      const { data } = await api.post("/services", serviceData);
-      return data;
+      const { data } = await api.post("/services/add", serviceData); // ✅ fixed route
+      return {
+        message: data.message,
+        service: {
+          ...data,
+          rating: data.ratings,
+          reviewCount: data.reviewsCount,
+        },
+      };
     } catch (error) {
       if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || "Failed to create service");
       }
       throw new Error("Failed to create service");
-    }
-  },
-
-  // Update a service (provider only)
-  updateService: async (serviceId: string, serviceData: Partial<Service>): Promise<{ message: string; service: Service }> => {
-    try {
-      const { data } = await api.patch(`/services/${serviceId}`, serviceData);
-      return data;
-    } catch (error) {
-      if (isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || "Failed to update service");
-      }
-      throw new Error("Failed to update service");
     }
   },
 

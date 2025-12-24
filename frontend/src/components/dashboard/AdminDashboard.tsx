@@ -160,7 +160,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-heading font-bold text-foreground">$45,230</p>
+                <p className="text-2xl font-heading font-bold text-foreground">Rs.45,230</p>
                 <p className="text-xs text-primary mt-1">+18% this month</p>
               </div>
               <DollarSign className="w-8 h-8 text-primary" />
@@ -300,7 +300,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
                       <TableCell className="font-medium">{booking.service}</TableCell>
                       <TableCell>{booking.user}</TableCell>
                       <TableCell>{booking.provider}</TableCell>
-                      <TableCell>${booking.amount}</TableCell>
+                      <TableCell>Rs.{booking.amount}</TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
