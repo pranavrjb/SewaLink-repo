@@ -1,0 +1,28 @@
+import axios from "axios";
+
+const API_BASE_URL ="http://localhost:5000/api/v1";
+
+// Create centralized axios instance
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+api.interceptors.request.use((config) => {
+  const userStr = localStorage.getItem("sewalink_user");
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    } catch {
+
+    }
+  }
+  return config;
+});
+
+export { isAxiosError } from "axios";
