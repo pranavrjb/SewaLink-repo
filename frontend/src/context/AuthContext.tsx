@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
 
       setUser(userData);
+      localStorage.setItem("token", data.token);
       localStorage.setItem("sewalink_user", JSON.stringify(userData));
     } catch (error) {
       if (isAxiosError(error)) {

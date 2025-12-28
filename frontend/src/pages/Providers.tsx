@@ -52,7 +52,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
 interface Provider {
-  id: string;
+  providerId: string; 
+  serviceId: string;  
   name: string;
   ownerName: string;
   avatar: string;
@@ -67,6 +68,7 @@ interface Provider {
   badges: string[];
   description: string;
 }
+
 
 const serviceTypes = [
   "All Services",
@@ -165,10 +167,11 @@ const ProviderCard = ({ provider, isListView = false }: ProviderCardProps) => (
       {/* Price and CTA */}
       <div className={`flex ${isListView ? "flex-col justify-center items-end gap-2" : "items-center justify-between"} mt-4 pt-4 border-t`}>
         <div className={isListView ? "text-right" : ""}>
-          <span className="text-2xl font-bold text-primary">${provider.pricePerHour}</span>
+          <span className="text-2xl font-bold text-primary">Rs.{provider.pricePerHour}</span>
           <span className="text-sm text-muted-foreground">/hr</span>
         </div>
-        <Link to={`/provider/${provider.id}`}>
+       <Link to={`/provider/${provider.providerId}`}>
+
           <Button>View Profile</Button>
         </Link>
       </div>
@@ -271,19 +274,19 @@ const FilterContent = ({
     {/* Price Range */}
     <div>
       <label className="text-sm font-medium mb-2 block">
-        Price Range: ${priceRange[0]} - ${priceRange[1]}/hr
+        Price Range: Rs.{priceRange[0]} - Rs.{priceRange[1]}/hr
       </label>
       <Slider
         value={priceRange}
         onValueChange={setPriceRange}
-        min={0}
-        max={150}
-        step={5}
+        min={500}
+        max={5000}
+        step={500}
         className="mt-4"
       />
       <div className="flex justify-between text-xs text-muted-foreground mt-2">
-        <span>$0</span>
-        <span>$150+</span>
+        <span>Rs.500</span>
+        <span>Rs.5000+</span>
       </div>
     </div>
 
@@ -310,13 +313,16 @@ const AddServiceForm = ({ onClose, onSuccess }: AddServiceFormProps) => {
     description: "",
     category: "",
     price: "",
+    phone: "",
+    location: "",
+    providerName: "",
   });
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.description || !formData.category || !formData.price) {
+    if (!formData.title || !formData.description || !formData.category || !formData.price || !formData.phone || !formData.location || !formData.providerName) {
       toast({
         title: "Error",
         description: "Please fill in all fields.",
@@ -332,6 +338,9 @@ const AddServiceForm = ({ onClose, onSuccess }: AddServiceFormProps) => {
         description: formData.description,
         category: formData.category,
         price: parseFloat(formData.price),
+        phone: formData.phone,
+        location: formData.location,
+        providerName: formData.providerName,
       });
 
       toast({
@@ -354,6 +363,37 @@ const AddServiceForm = ({ onClose, onSuccess }: AddServiceFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="providerName">Provider Name</Label>
+        <Input
+          id="providerName"
+          value={formData.providerName}
+          onChange={(e) => setFormData({ ...formData, providerName: e.target.value })}
+          placeholder="Your name or business name"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="phone">Phone Number</Label>
+        <Input
+          id="phone"
+          type="tel"
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          placeholder="e.g., +1 (555) 123-4567"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="location">Location</Label>
+        <Input
+          id="location"
+          value={formData.location}
+          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+          placeholder="e.g., Los Angeles, CA"
+        />
+      </div>
+
       <div>
         <Label htmlFor="title">Service Title</Label>
         <Input
@@ -384,7 +424,7 @@ const AddServiceForm = ({ onClose, onSuccess }: AddServiceFormProps) => {
       </div>
       
       <div>
-        <Label htmlFor="price">Price per Hour ($)</Label>
+        <Label htmlFor="price">Price per Hour (Rs.)</Label>
         <Input
           id="price"
           type="number"
@@ -464,17 +504,17 @@ export default function Providers() {
     try {
       setIsLoading(true);
       const { services } = await servicesApi.getServices();
-      
-      // Transform services to provider format
+     
       const transformedProviders: Provider[] = services.map((service) => ({
-        id: service._id,
+        providerId: service.provider?._id,
+        serviceId: service._id,
         name: service.title,
         ownerName: service.provider?.name || "Unknown Provider",
         avatar: "",
         serviceType: service.category,
-        location: "Los Angeles, CA", // Default location since not in service model
-        rating: service.rating || 4.5,
-        totalReviews: service.reviewCount || 0,
+        location: service.location || "Kathmandu",
+        rating: service.ratings || 4.5,
+        totalReviews: service.reviewsCount || 0,
         completedJobs: Math.floor(Math.random() * 200) + 50,
         pricePerHour: service.price,
         isVerified: true,
@@ -482,6 +522,7 @@ export default function Providers() {
         badges: ["Professional"],
         description: service.description,
       }));
+
       
       setProviders(transformedProviders);
       
@@ -799,7 +840,7 @@ export default function Providers() {
                     )}
                     {(priceRange[0] > 0 || priceRange[1] < 150) && (
                       <Badge variant="secondary" className="gap-1">
-                        ${priceRange[0]} - ${priceRange[1]}/hr
+                        Rs.{priceRange[0]} - Rs.{priceRange[1]}/hr
                         <button onClick={() => setPriceRange([0, 150])}>
                           <X className="h-3 w-3" />
                         </button>

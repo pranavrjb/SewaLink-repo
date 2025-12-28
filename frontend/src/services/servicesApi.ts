@@ -7,54 +7,33 @@ export interface Service {
   category: string;
   price: number;
   image?: string;
+  phone: string;
+  location: string;
+
   provider: {
     _id: string;
     name: string;
     email: string;
     phone?: string;
   };
-  rating?: number;      // mapped from backend ratings
-  reviewCount?: number; // mapped from backend reviewsCount
+
+  ratings?: number;
+  reviewsCount?: number;
+
   createdAt: string;
   updatedAt: string;
 }
 
 interface ServicesResponse {
   services: Service[];
-  total?: number;
-  page?: number;
-  limit?: number;
-}
-
-interface ServiceFilters {
-  category?: string;
-  search?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  page?: number;
-  limit?: number;
 }
 
 export const servicesApi = {
-  // Get all services with optional filters
-  getServices: async (filters?: ServiceFilters): Promise<ServicesResponse> => {
+  // GET all services
+  getServices: async (): Promise<ServicesResponse> => {
     try {
-      const params = new URLSearchParams();
-      if (filters?.category) params.append("category", filters.category);
-      if (filters?.search) params.append("search", filters.search);
-      if (filters?.minPrice) params.append("minPrice", filters.minPrice.toString());
-      if (filters?.maxPrice) params.append("maxPrice", filters.maxPrice.toString());
-      if (filters?.page) params.append("page", filters.page.toString());
-      if (filters?.limit) params.append("limit", filters.limit.toString());
-
-      const { data } = await api.get(`/services?${params.toString()}`);
-      // Map backend ratings/reviewsCount to frontend
-      const mappedServices = data.map((s: any) => ({
-        ...s,
-        rating: s.ratings,
-        reviewCount: s.reviewsCount,
-      }));
-      return { services: mappedServices };
+      const { data } = await api.get("/services");
+      return data;
     } catch (error) {
       if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || "Failed to fetch services");
@@ -63,17 +42,11 @@ export const servicesApi = {
     }
   },
 
-  // Get a single service by ID
-  getServiceById: async (serviceId: string): Promise<{ service: Service }> => {
+  // GET service by ID
+  getServiceById: async (id: string): Promise<{ service: Service }> => {
     try {
-      const { data } = await api.get(`/services/${serviceId}`);
-      return {
-        service: {
-          ...data,
-          rating: data.ratings,
-          reviewCount: data.reviewsCount,
-        },
-      };
+      const { data } = await api.get(`/services/${id}`);
+      return data;
     } catch (error) {
       if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || "Failed to fetch service");
@@ -82,20 +55,18 @@ export const servicesApi = {
     }
   },
 
-  // Create a new service (provider only)
-  createService: async (
-    serviceData: Omit<Service, "_id" | "provider" | "createdAt" | "updatedAt">
-  ): Promise<{ message: string; service: Service }> => {
+  // CREATE service (provider only)
+  createService: async (serviceData: {
+    title: string;
+    description: string;
+    category: string;
+    price: number;
+    phone: string;
+    location: string;
+  }) => {
     try {
-      const { data } = await api.post("/services/add", serviceData); // ✅ fixed route
-      return {
-        message: data.message,
-        service: {
-          ...data,
-          rating: data.ratings,
-          reviewCount: data.reviewsCount,
-        },
-      };
+      const { data } = await api.post("/services/add", serviceData);
+      return data;
     } catch (error) {
       if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || "Failed to create service");
@@ -104,10 +75,10 @@ export const servicesApi = {
     }
   },
 
-  // Delete a service (provider only)
-  deleteService: async (serviceId: string): Promise<{ message: string }> => {
+  // DELETE service
+  deleteService: async (id: string) => {
     try {
-      const { data } = await api.delete(`/services/${serviceId}`);
+      const { data } = await api.delete(`/services/${id}`);
       return data;
     } catch (error) {
       if (isAxiosError(error)) {
@@ -116,4 +87,20 @@ export const servicesApi = {
       throw new Error("Failed to delete service");
     }
   },
+
+  // GET services by provider ID
+  getProviderProfile: async (id: string) => {
+  try {
+    const { data } = await api.get(`/provider/${id}`);
+    return data; // { provider, services }
+  } catch (error) {
+    if (isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message || "Failed to get Provider Profile"
+      );
+    }
+    throw new Error("Failed to get Provider Profile");
+  }
+},
+
 };

@@ -14,6 +14,7 @@ const serviceRoutes = require("./routes/serviceRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const providerRoutes = require("./routes/providerRoutes");
 
 app.get("/", (req, res) => {
     res.send("SewaLink API running...");
@@ -23,5 +24,7 @@ app.use("/api/v1/services", serviceRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/contact", contactRoutes);
+app.use("/api/v1/provider", providerRoutes);
+
 
 module.exports = app;
