@@ -2,12 +2,12 @@ const express = require("express");
 const http = require("http");
 const mongoose = require("mongoose");
 require("dotenv").config();
-const app = require("./app"); // your Express app
+const app = require("./app"); 
 
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
   cors: {
-    origin: "*", // change this to your frontend URL in production
+    origin: "*", 
     methods: ["GET", "POST"],
   },
 });

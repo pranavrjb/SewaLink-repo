@@ -1,7 +1,6 @@
 const Notification = require("../models/Notification");
-const { sendNotification: ioSendNotification } = require("../server");
+const { sendToUser } = require("./socket");
 
-// Send enriched notifications
 exports.sendNotification = async (userId, payload) => {
   try {
     const notification = await Notification.create({
@@ -10,11 +9,9 @@ exports.sendNotification = async (userId, payload) => {
       message: payload.message,
       booking: payload.bookingId,
       review: payload.reviewId,
-      isRead: false,
     });
 
-    // Emit real-time notification with enriched payload
-    ioSendNotification(userId, {
+    sendToUser(userId, "new_notification", {
       ...payload,
       notificationId: notification._id,
       createdAt: notification.createdAt,
