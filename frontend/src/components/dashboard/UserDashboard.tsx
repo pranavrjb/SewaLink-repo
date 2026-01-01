@@ -8,7 +8,9 @@ import {
   Star, 
   ArrowRight,
   CheckCircle,
-  Loader2
+  Loader2,
+  DollarSign,
+  History
 } from "lucide-react";
 import { bookingApi, Booking } from "@/services/bookingApi";
 import { format } from "date-fns";
@@ -28,6 +30,7 @@ const UserDashboard = ({ user }: UserDashboardProps) => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPaymentHistory, setShowPaymentHistory] = useState(false);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -91,7 +94,7 @@ const UserDashboard = ({ user }: UserDashboardProps) => {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:bg-secondary/20 transition-colors" onClick={() => setShowPaymentHistory(!showPaymentHistory)}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -100,10 +103,9 @@ const UserDashboard = ({ user }: UserDashboardProps) => {
                   Rs.{isLoading ? "-" : totalSpent}
                 </p>
               </div>
-              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-lg">
-                💰
-              </div>
+              <History className="w-8 h-8 text-primary" />
             </div>
+            <p className="text-xs text-muted-foreground mt-2">Click to view payment history</p>
           </CardContent>
         </Card>
         <Card>
@@ -120,6 +122,51 @@ const UserDashboard = ({ user }: UserDashboardProps) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Payment History Modal */}
+      {showPaymentHistory && (
+        <Card className="mb-8">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-primary" />
+                Payment History
+              </CardTitle>
+              <CardDescription>Your completed service payments</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setShowPaymentHistory(false)}>
+              Close
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : bookings.filter(b => b.status === "completed").length > 0 ? (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {bookings.filter(b => b.status === "completed").map((booking) => (
+                  <div key={booking._id} className="p-3 bg-secondary/30 rounded-lg flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">{booking.service?.title || "Service"}</p>
+                      <p className="text-sm text-muted-foreground">by {booking.service?.provider?.name || "Provider"}</p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                        <Calendar className="w-3 h-3" />
+                        {format(new Date(booking.updatedAt || booking.createdAt), "MMM d, yyyy")}
+                        <Clock className="w-3 h-3 ml-2" />
+                        {format(new Date(booking.updatedAt || booking.createdAt), "h:mm a")}
+                      </div>
+                    </div>
+                    <span className="font-semibold text-primary">Rs.{booking.service?.price || 0}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">No completed payments yet</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Upcoming Bookings */}
@@ -237,10 +284,10 @@ const UserDashboard = ({ user }: UserDashboardProps) => {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-between" variant="outline" onClick={() => navigate("/services")}>
+              {/* <Button className="w-full justify-between" variant="outline" onClick={() => navigate("/services")}>
                 Book New Service
                 <ArrowRight className="w-4 h-4" />
-              </Button>
+              </Button> */}
               <Button className="w-full justify-between" variant="outline" onClick={() => navigate("/services")}>
                 View All Services
                 <ArrowRight className="w-4 h-4" />

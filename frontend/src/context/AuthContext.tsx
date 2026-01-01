@@ -13,7 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   register: (data: RegisterData) => Promise<{ message: string }>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -34,19 +34,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user on mount
-    const storedUser = localStorage.getItem("sewalink_user");
+    // Check for stored user on mount (localStorage for "remember me", sessionStorage otherwise)
+    const storedUser = localStorage.getItem("sewalink_user") || sessionStorage.getItem("sewalink_user");
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
       } catch {
         localStorage.removeItem("sewalink_user");
+        sessionStorage.removeItem("sewalink_user");
       }
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, rememberMe: boolean = false) => {
     try {
       const { data } = await api.post("/auth/login", { email, password });
       
@@ -60,8 +61,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
 
       setUser(userData);
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("sewalink_user", JSON.stringify(userData));
+      
+      // Use localStorage for persistent sessions (remember me), sessionStorage otherwise
+      if (rememberMe) {
+        localStorage.setItem("sewalink_user", JSON.stringify(userData));
+        sessionStorage.removeItem("sewalink_user");
+      } else {
+        sessionStorage.setItem("sewalink_user", JSON.stringify(userData));
+        localStorage.removeItem("sewalink_user");
+      }
     } catch (error) {
       if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || "Login failed");
@@ -85,6 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("sewalink_user");
+    sessionStorage.removeItem("sewalink_user");
   };
 
   return (

@@ -50,6 +50,7 @@ import {
 import { servicesApi, Service } from "@/services/servicesApi";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { set } from "date-fns";
 
 interface Provider {
   providerId: string; 
@@ -84,9 +85,16 @@ const serviceTypes = [
 
 const locations = [
   "All Locations",
-  "Los Angeles, CA",
-  "San Francisco, CA",
-  "San Diego, CA",
+  "Kathmandu",
+  "Bhaktapur",
+  "Lalitpur",
+  "Biratnagar",
+  "Pokhara",
+  "Chitwan",
+  "Dharan",
+  "Butwal",
+  "Hetauda",
+  "Janakpur",
 ];
 
 const sortOptions = [
@@ -279,7 +287,7 @@ const FilterContent = ({
       <Slider
         value={priceRange}
         onValueChange={setPriceRange}
-        min={500}
+        min={0}
         max={5000}
         step={500}
         className="mt-4"
@@ -380,7 +388,7 @@ const AddServiceForm = ({ onClose, onSuccess }: AddServiceFormProps) => {
           type="tel"
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          placeholder="e.g., +1 (555) 123-4567"
+          placeholder="e.g., +977 981XXXXXXX"
         />
       </div>
 
@@ -390,7 +398,7 @@ const AddServiceForm = ({ onClose, onSuccess }: AddServiceFormProps) => {
           id="location"
           value={formData.location}
           onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-          placeholder="e.g., Los Angeles, CA"
+          placeholder="e.g., Kathmandu, Nepal"
         />
       </div>
 
@@ -428,11 +436,11 @@ const AddServiceForm = ({ onClose, onSuccess }: AddServiceFormProps) => {
         <Input
           id="price"
           type="number"
-          min="0"
-          step="0.01"
+          min="500"
+          step="100"
           value={formData.price}
           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-          placeholder="e.g., 75"
+          placeholder="e.g., 1000"
         />
       </div>
       
@@ -472,7 +480,7 @@ export default function Providers() {
   const [selectedService, setSelectedService] = useState(searchParams.get("category") || "All Services");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [minRating, setMinRating] = useState(0);
-  const [priceRange, setPriceRange] = useState([0, 150]);
+  const [priceRange, setPriceRange] = useState([500, 5000]);
   const [sortBy, setSortBy] = useState("rating");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -592,7 +600,7 @@ export default function Providers() {
     setSelectedService("All Services");
     setSelectedLocation("All Locations");
     setMinRating(0);
-    setPriceRange([0, 150]);
+    setPriceRange([500, 5000]);
     setSearchParams({});
   };
 
@@ -600,8 +608,8 @@ export default function Providers() {
     selectedService !== "All Services" ||
     selectedLocation !== "All Locations" ||
     minRating > 0 ||
-    priceRange[0] > 0 ||
-    priceRange[1] < 150;
+    priceRange[0] > 500 ||
+    priceRange[1] < 5000;
 
   const filterProps = {
     selectedService,
@@ -681,7 +689,6 @@ export default function Providers() {
         <section className="py-8">
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row gap-8">
-              {/* Desktop Filters Sidebar */}
               <aside className="hidden lg:block w-72 flex-shrink-0">
                 <Card className="sticky top-4">
                   <CardContent className="p-6">
@@ -838,10 +845,10 @@ export default function Providers() {
                         </button>
                       </Badge>
                     )}
-                    {(priceRange[0] > 0 || priceRange[1] < 150) && (
+                    {(priceRange[0] > 500 || priceRange[1] < 5000) && (
                       <Badge variant="secondary" className="gap-1">
                         Rs.{priceRange[0]} - Rs.{priceRange[1]}/hr
-                        <button onClick={() => setPriceRange([0, 150])}>
+                        <button onClick={() => setPriceRange([500, 5000])}>
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>

@@ -1,25 +1,28 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-const bookingAuth = (req, res, next) => {
+module.exports = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer "))
-    return res.status(401).json({ message: "Unauthorized" });
 
-  const token = authHeader.split(" ")[1];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
   try {
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { userId: decoded.userId, role: decoded.role };
 
-    // Optional: allow only users to create bookings
-    if (req.method === "POST" && decoded.role !== "user") {
-      return res.status(403).json({ message: "Access denied: Users only" });
-    }
+    const user = await User.findById(decoded.userId).select("name role");
+    if (!user) return res.status(401).json({ message: "User not found" });
+
+    req.user = {
+      userId: user._id,
+      name: user.name,
+      role: user.role,
+    };
 
     next();
   } catch (err) {
     res.status(401).json({ message: "Invalid token" });
   }
 };
-
-module.exports = bookingAuth;

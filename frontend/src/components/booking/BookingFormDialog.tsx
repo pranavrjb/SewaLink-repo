@@ -77,6 +77,7 @@ export function BookingFormDialog({
     defaultValues: {
       serviceAddress: "",
       notes: "",
+      preferredDate: undefined,
     },
   });
 
@@ -95,9 +96,10 @@ export function BookingFormDialog({
       toast({
         title: "Booking Created!",
         description: "Your booking request has been sent to the provider.",
+        variant: "success",
       });
 
-      form.reset();
+      form.reset({ serviceAddress: "", notes: "", preferredDate: undefined });
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
@@ -120,7 +122,7 @@ export function BookingFormDialog({
             {service ? (
               <>
                 Book <span className="font-semibold text-foreground">{service.title}</span> for{" "}
-                <span className="font-semibold text-primary">${service.price}</span>
+                <span className="font-semibold text-primary">Rs.{service.price}</span>
               </>
             ) : (
               "Fill in the details to book this service"
@@ -180,7 +182,7 @@ export function BookingFormDialog({
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) => date < new Date()}
+                        disabled={(date) => date.setHours(0,0,0,0) < new Date().setHours(0,0,0,0)}
                         initialFocus
                       />
                     </PopoverContent>

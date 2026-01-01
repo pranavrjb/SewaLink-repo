@@ -10,4 +10,4 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app ./
 EXPOSE 5000
 ENV NODE_ENV=production
-CMD [ "nodemon", "server.js" ]
+CMD [ "npm", "run", "dev" ]

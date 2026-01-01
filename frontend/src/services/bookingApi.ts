@@ -28,7 +28,7 @@ interface Booking {
   serviceAddress: string;
   preferredDate: string;
   notes?: string;
-  status: "pending" | "accepted" | "rejected" | "completed" | "cancelled";
+  status: "pending" | "accepted" | "rejected" | "Completed" | "Cancelled";
   createdAt: string;
   updatedAt: string;
 }
@@ -48,7 +48,7 @@ export const bookingApi = {
   },
 
   // Get user's bookings
-  getUserBookings: async (): Promise<{ bookings: Booking[] }> => {
+  getUserBookings: async (): Promise<Booking[]> => {
     try {
       const { data } = await api.get("/bookings/my");
       return data;
@@ -61,7 +61,7 @@ export const bookingApi = {
   },
 
   // Get provider's bookings
-  getProviderBookings: async (): Promise<{ bookings: Booking[] }> => {
+  getProviderBookings: async (): Promise<Booking[]> => {
     try {
       const { data } = await api.get("/bookings/provider");
       return data;

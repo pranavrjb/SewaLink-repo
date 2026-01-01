@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +28,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Eye
+  Eye,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,6 +38,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { api } from "@/lib/api";
+import { format } from "date-fns";
 
 interface User {
   id: string;
@@ -49,33 +52,81 @@ interface AdminDashboardProps {
   user: User;
 }
 
-// Mock data
-const recentUsers = [
-  { id: 1, name: "Alice Johnson", email: "alice@example.com", role: "user", status: "active", joined: "Dec 22, 2025" },
-  { id: 2, name: "Bob Smith", email: "bob@example.com", role: "provider", status: "pending", joined: "Dec 21, 2025" },
-  { id: 3, name: "Carol Davis", email: "carol@example.com", role: "user", status: "active", joined: "Dec 20, 2025" },
-  { id: 4, name: "David Lee", email: "david@example.com", role: "provider", status: "active", joined: "Dec 19, 2025" },
-  { id: 5, name: "Emma Wilson", email: "emma@example.com", role: "user", status: "suspended", joined: "Dec 18, 2025" },
-];
+interface AdminUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  status?: string;
+  createdAt: string;
+}
 
-const recentBookings = [
-  { id: 1, service: "Plumbing", user: "Alice J.", provider: "John S.", amount: 50, status: "completed" },
-  { id: 2, service: "Cleaning", user: "Bob W.", provider: "Maria G.", amount: 40, status: "in-progress" },
-  { id: 3, service: "Electrical", user: "Carol D.", provider: "Mike J.", amount: 60, status: "pending" },
-  { id: 4, service: "Painting", user: "Dave L.", provider: "Sarah K.", amount: 55, status: "completed" },
-];
+interface AdminBooking {
+  _id: string;
+  service: {
+    title: string;
+    category: string;
+    price: number;
+  };
+  user: {
+    _id: string;
+    name: string;
+  };
+  status: string;
+  createdAt: string;
+}
 
-const pendingApprovals = [
-  { id: 1, name: "New Provider Application", type: "provider", count: 5 },
-  { id: 2, name: "Service Requests", type: "service", count: 12 },
-  { id: 3, name: "Reported Issues", type: "report", count: 3 },
-];
+interface AdminStats {
+  totalUsers: number;
+  totalProviders: number;
+  totalBookings: number;
+  totalRevenue: number;
+  pendingProviders: number;
+  pendingBookings: number;
+  reportedIssues: number;
+}
 
 type TabType = "overview" | "users" | "providers" | "bookings" | "reports";
 
 const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [searchQuery, setSearchQuery] = useState("");
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [bookings, setBookings] = useState<AdminBooking[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const [usersRes, bookingsRes, statsRes] = await Promise.all([
+          api.get("/admin/users"),
+          api.get("/admin/bookings"),
+          api.get("/admin/stats")
+        ]);
+
+        setUsers(usersRes.data.users || usersRes.data || []);
+        setBookings(bookingsRes.data.bookings || bookingsRes.data || []);
+        setStats(statsRes.data);
+      } catch (error) {
+        console.error("Failed to fetch admin data:", error);
+        // Set defaults if API fails
+        setStats({
+          totalUsers: 0,
+          totalProviders: 0,
+          totalBookings: 0,
+          totalRevenue: 0,
+          pendingProviders: 0,
+          pendingBookings: 0,
+          reportedIssues: 0
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAdminData();
+  }, []);
 
   const tabs = [
     { id: "overview" as TabType, label: "Overview", icon: BarChart3 },
@@ -83,6 +134,21 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
     { id: "providers" as TabType, label: "Providers", icon: Briefcase },
     { id: "bookings" as TabType, label: "Bookings", icon: FileText },
     { id: "reports" as TabType, label: "Reports", icon: AlertTriangle },
+  ];
+
+  const filteredUsers = users.filter(u => 
+    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const completedBookings = bookings.filter(b => b.status === "completed");
+  const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.service?.price || 0), 0);
+  const providerCount = users.filter(u => u.role === "provider").length;
+
+  const pendingApprovals = [
+    { id: 1, name: "New Provider Applications", type: "provider", count: stats?.pendingProviders || 0 },
+    { id: 2, name: "Pending Bookings", type: "booking", count: stats?.pendingBookings || bookings.filter(b => b.status === "pending").length },
+    { id: 3, name: "Reported Issues", type: "report", count: stats?.reportedIssues || 0 },
   ];
 
   return (
@@ -136,8 +202,9 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-2xl font-heading font-bold text-foreground">2,456</p>
-                <p className="text-xs text-primary mt-1">+12% this month</p>
+                <p className="text-2xl font-heading font-bold text-foreground">
+                  {isLoading ? "-" : stats?.totalUsers || users.length}
+                </p>
               </div>
               <Users className="w-8 h-8 text-primary" />
             </div>
@@ -148,8 +215,9 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Providers</p>
-                <p className="text-2xl font-heading font-bold text-foreground">342</p>
-                <p className="text-xs text-accent mt-1">+8% this month</p>
+                <p className="text-2xl font-heading font-bold text-foreground">
+                  {isLoading ? "-" : stats?.totalProviders || providerCount}
+                </p>
               </div>
               <Briefcase className="w-8 h-8 text-accent" />
             </div>
@@ -160,8 +228,9 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-heading font-bold text-foreground">Rs.45,230</p>
-                <p className="text-xs text-primary mt-1">+18% this month</p>
+                <p className="text-2xl font-heading font-bold text-foreground">
+                  ${isLoading ? "-" : stats?.totalRevenue || totalRevenue}
+                </p>
               </div>
               <DollarSign className="w-8 h-8 text-primary" />
             </div>
@@ -172,8 +241,9 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Bookings</p>
-                <p className="text-2xl font-heading font-bold text-foreground">1,892</p>
-                <p className="text-xs text-primary mt-1">+15% this month</p>
+                <p className="text-2xl font-heading font-bold text-foreground">
+                  {isLoading ? "-" : stats?.totalBookings || bookings.length}
+                </p>
               </div>
               <TrendingUp className="w-8 h-8 text-primary" />
             </div>
@@ -201,79 +271,94 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
                     className="pl-9 w-48"
                   />
                 </div>
-                <Button variant="outline" size="sm">
-                  View All
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/admin/users">View All</Link>
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={
-                            user.status === "active"
-                              ? "bg-primary/10 text-primary border-primary/20"
-                              : user.status === "pending"
-                              ? "bg-accent/10 text-accent border-accent/20"
-                              : "bg-destructive/10 text-destructive border-destructive/20"
-                          }
-                        >
-                          {user.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{user.joined}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-card">
-                            <DropdownMenuItem>
-                              <Eye className="w-4 h-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <UserCheck className="w-4 h-4 mr-2" />
-                              Approve
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
-                              <UserX className="w-4 h-4 mr-2" />
-                              Suspend
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Joined</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.slice(0, 5).map((u) => (
+                      <TableRow key={u._id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{u.name}</p>
+                            <p className="text-sm text-muted-foreground">{u.email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {u.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={
+                              u.status === "active" || !u.status
+                                ? "bg-primary/10 text-primary border-primary/20"
+                                : u.status === "pending"
+                                ? "bg-accent/10 text-accent border-accent/20"
+                                : "bg-destructive/10 text-destructive border-destructive/20"
+                            }
+                          >
+                            {u.status || "active"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(u.createdAt), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-card">
+                              <DropdownMenuItem>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <UserCheck className="w-4 h-4 mr-2" />
+                                Approve
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive">
+                                <UserX className="w-4 h-4 mr-2" />
+                                Suspend
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredUsers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          No users found
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
 
@@ -284,43 +369,60 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
               <CardDescription>Latest service bookings</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Service</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Provider</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentBookings.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell className="font-medium">{booking.service}</TableCell>
-                      <TableCell>{booking.user}</TableCell>
-                      <TableCell>{booking.provider}</TableCell>
-                      <TableCell>Rs.{booking.amount}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={
-                            booking.status === "completed"
-                              ? "bg-primary/10 text-primary"
-                              : booking.status === "in-progress"
-                              ? "bg-accent/10 text-accent"
-                              : "bg-secondary text-secondary-foreground"
-                          }
-                        >
-                          {booking.status === "completed" && <CheckCircle className="w-3 h-3 mr-1" />}
-                          {booking.status === "in-progress" && <Clock className="w-3 h-3 mr-1" />}
-                          {booking.status}
-                        </Badge>
-                      </TableCell>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Service</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {bookings.slice(0, 5).map((booking) => (
+                      <TableRow key={booking._id}>
+                        <TableCell className="font-medium">{booking.service?.title || "N/A"}</TableCell>
+                        <TableCell>{booking.user?.name || "N/A"}</TableCell>
+                        <TableCell>${booking.service?.price || 0}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(booking.createdAt), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={
+                              booking.status === "completed"
+                                ? "bg-primary/10 text-primary"
+                                : booking.status === "accepted"
+                                ? "bg-accent/10 text-accent"
+                                : booking.status === "pending"
+                                ? "bg-secondary text-secondary-foreground"
+                                : "bg-destructive/10 text-destructive"
+                            }
+                          >
+                            {booking.status === "completed" && <CheckCircle className="w-3 h-3 mr-1" />}
+                            {booking.status === "accepted" && <Clock className="w-3 h-3 mr-1" />}
+                            {booking.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {bookings.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          No bookings found
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -361,29 +463,39 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <CardContent className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span>User Satisfaction</span>
-                  <span className="font-medium text-primary">94%</span>
+                  <span>Booking Success Rate</span>
+                  <span className="font-medium text-primary">
+                    {bookings.length > 0 
+                      ? Math.round((completedBookings.length / bookings.length) * 100) 
+                      : 0}%
+                  </span>
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: "94%" }} />
+                  <div 
+                    className="h-full bg-primary rounded-full" 
+                    style={{ 
+                      width: `${bookings.length > 0 
+                        ? Math.round((completedBookings.length / bookings.length) * 100) 
+                        : 0}%` 
+                    }} 
+                  />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Provider Rating</span>
-                  <span className="font-medium text-primary">4.8/5</span>
+                  <span>Active Providers</span>
+                  <span className="font-medium text-primary">
+                    {stats?.totalProviders || providerCount}
+                  </span>
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                  <div className="h-full bg-accent rounded-full" style={{ width: "96%" }} />
+                  <div className="h-full bg-accent rounded-full" style={{ width: "100%" }} />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Issue Resolution</span>
-                  <span className="font-medium text-primary">89%</span>
-                </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: "89%" }} />
+                  <span>Total Transactions</span>
+                  <span className="font-medium text-primary">{completedBookings.length}</span>
                 </div>
               </div>
             </CardContent>

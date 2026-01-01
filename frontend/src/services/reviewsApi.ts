@@ -63,4 +63,17 @@ export const reviewsApi = {
       throw new Error("Failed to fetch rating");
     }
   },
+
+  // Get all reviews for a provider
+  getProviderReviews: async (): Promise<{ reviews: Review[] }> => {
+    try {
+      const response = await api.get("/reviews/provider");
+      return response.data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || "Failed to fetch provider reviews");
+      }
+      throw new Error("Failed to fetch provider reviews");
+    }
+  },
 };

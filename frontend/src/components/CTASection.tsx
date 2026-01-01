@@ -17,7 +17,7 @@ const CTASection = () => {
             Join thousands of happy customers who trust SewaLink for all their home service needs.
           </p>
           <div className="flex flex-wrap justify-center gap-4 animate-fade-up delay-200">
-            <Button variant="hero">
+            <Button variant="hero" >
               Book a Service Now
               <ArrowRight className="w-5 h-5" />
             </Button>

@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { ProtectedRoute, GuestRoute } from "@/components/auth";
+import {Cloudinary} from "@cloudinary/url-gen";
+import {AdvancedImage} from '@cloudinary/react';
+import {fill} from "@cloudinary/url-gen/actions/resize";
 import Index from "./pages/Index";
 import Services from "./pages/Services";
 import Login from "./pages/Login";
@@ -28,6 +31,16 @@ import { UserManagement, ServiceManagement } from "./pages/admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+const cld = new Cloudinary({
+    cloud: {
+      cloudName: 'sewalink'
+    }
+  });
+  // Instantiate a CloudinaryImage object for the image with the public ID, 'docs/models'.
+  const myImage = cld.image('docs/models'); 
+
+  // Resize to 250 x 250 pixels using the 'fill' crop mode.
+  myImage.resize(fill().width(250).height(250));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -36,6 +49,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+         <AdvancedImage cldImg={myImage} />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />

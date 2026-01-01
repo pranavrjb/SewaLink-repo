@@ -30,7 +30,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { servicesApi, Service } from "@/services/servicesApi";
-import { reviewsApi } from "@/services/reviewApi";
+import { reviewsApi } from "@/services/reviewsApi";
 import { api } from "@/lib/api";
 
 interface ProviderData {
@@ -379,7 +379,7 @@ export default function ProviderProfile() {
                       <CardContent>
                         <div className="flex items-baseline justify-between">
                           <div>
-                            <span className="text-2xl font-bold text-primary">${service.price}</span>
+                            <span className="text-2xl font-bold text-primary">Rs.{service.price}</span>
                           </div>
                           <Button size="sm" onClick={() => handleBookService(service)}>Book</Button>
                         </div>
