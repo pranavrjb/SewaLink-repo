@@ -1,5 +1,5 @@
 FROM nginx:alpine
-COPY --from=frontend /dist /usr/share/nginx/html
+COPY --from=build-frontend /dist /usr/share/nginx/html
 
 COPY default.conf /etc/nginx/conf.d/default.conf
 
