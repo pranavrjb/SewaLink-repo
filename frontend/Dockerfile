@@ -11,4 +11,4 @@ RUN npm run build
 # Production stage
 FROM alpine AS artifact
 WORKDIR /dist
-COPY --from=build /app/dist .
+COPY --from=build-frontend /app/dist .
