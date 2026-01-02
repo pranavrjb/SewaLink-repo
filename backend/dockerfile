@@ -12,9 +12,12 @@ WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app ./
 <<<<<<< HEAD
+<<<<<<< HEAD
 CMD [ "node","server.js" ]
 =======
 
+=======
+>>>>>>> 0e4a4c6 (fix: remove unnecessary blank line in Dockerfile)
 EXPOSE 5000
 CMD ["node", "server.js"]
 >>>>>>> 7fd5b2ac5e2a16b9865a93c8be50c9afa94d9d40
