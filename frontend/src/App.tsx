@@ -49,7 +49,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-         <AdvancedImage cldImg={myImage} />
+         {/* <AdvancedImage cldImg={myImage} /> */}
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
