@@ -1,11 +1,20 @@
+# Build stage
 FROM node:20-alpine AS build
 WORKDIR /app
+
 COPY package*.json ./
 RUN npm ci
 COPY . .
 
-FROM node:20-alpine AS production
+# Production stage
+FROM node:20-alpine
 WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app ./
+<<<<<<< HEAD
 CMD [ "node","server.js" ]
+=======
+
+EXPOSE 5000
+CMD ["node", "server.js"]
+>>>>>>> 7fd5b2ac5e2a16b9865a93c8be50c9afa94d9d40
