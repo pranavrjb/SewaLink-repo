@@ -1,5 +1,5 @@
 
-services:           -jammy
+services:  
   mongo:
     image: mongo:7.0
     container_name: mongo
