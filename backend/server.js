@@ -3,7 +3,6 @@ const http = require("http");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const app = require("./app"); 
-
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
   cors: {
@@ -50,8 +49,9 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
-    server.listen(PORT, () => {
+    server.listen(PORT,"0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => console.error(err));
+

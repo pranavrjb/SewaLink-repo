@@ -15,10 +15,15 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const providerRoutes = require("./routes/providerRoutes");
+const PORT = process.env.PORT || 5000;
 
 app.get("/", (req, res) => {
     res.send("SewaLink API running...");
 });
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/services", serviceRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
