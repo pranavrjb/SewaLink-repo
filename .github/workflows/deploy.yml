@@ -20,14 +20,8 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      
-      - name: Debug ECR secrets
-        run: |
-          echo "FRONTEND_REPO='${{ secrets.ECR_FRONTEND_REPO }}'"
-          echo "BACKEND_REPO='${{ secrets.ECR_BACKEND_REPO }}'"
-
-
-      #frontend image build and push
+        
+        #frontend image build and push
       - name: Build frontend docker image
         run: |
           docker build -t sewalink-frontend ./frontend
