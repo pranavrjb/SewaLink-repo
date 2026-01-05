@@ -1,0 +1,50 @@
+name: CICD MERN ECS
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      #frontend image build and push
+      - name: Build frontend docker image
+        run: |
+          docker build -t sewalink-frontend ./frontend
+          docker tag sewalink-frontend:latest ${{ secrets.ECR_REPOSITORY_URL }}:latest
+          docker push ${{ secrets.ECR_REPOSITORY_URL }}:latest
+
+      - name: Update frontend ECS service
+        run: |
+          aws ecs update-service \
+           --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
+           --service ${{ secrets.FRONTEND_SERVICE_NAME }} \
+           --force-new-deployment
+
+      #backend image build and push
+      - name: Build backend docker image
+        run: |
+          docker build -t sewalink-backend ./backend
+          docker tag sewalink-backend:latest ${{ secrets.ECR_REPOSITORY_URL }}:latest
+          docker push ${{ secrets.ECR_REPOSITORY_URL }}:latest
+
+      - name: Update backend ECS service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
+            --service ${{ secrets.BACKEND_SERVICE_NAME }} \
+            --force-new-deployment
