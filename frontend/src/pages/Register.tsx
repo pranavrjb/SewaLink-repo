@@ -132,7 +132,7 @@ const Register = () => {
                   <Input
                     id="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Your full name"
                     value={form.name}
                     onChange={(e) => handleChange("name", e.target.value)}
                     className={`pl-10 ${errors.name ? "border-destructive" : ""}`}
@@ -170,7 +170,7 @@ const Register = () => {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="+977 98XXXXXXX"
                     value={form.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
                     className={`pl-10 ${errors.phone ? "border-destructive" : ""}`}
