@@ -16,7 +16,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/sewalink
+      - MONGO_URI=mongodb+srv://sewalinkdb:pranavrjb3377@sewalinkdb.kcozp7d.mongodb.net/sewalinkdb?retryWrites=true&w=majority
       - JWT_SECRET=your_jwt_secret
     depends_on:
       - mongo
