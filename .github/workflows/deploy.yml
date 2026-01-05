@@ -25,8 +25,8 @@ jobs:
       - name: Build frontend docker image
         run: |
           docker build -t sewalink-frontend ./frontend
-          docker tag sewalink-frontend:latest ${{ secrets.ECR_REPOSITORY_URL }}:latest
-          docker push ${{ secrets.ECR_REPOSITORY_URL }}:latest
+          docker tag sewalink-frontend:latest ${{ secrets.ECR_REPOSITORY_URL }}/sewalink-frontend:latest
+          docker push ${{ secrets.ECR_REPOSITORY_URL }}/sewalink-frontend:latest
 
       - name: Update frontend ECS service
         run: |
@@ -39,8 +39,8 @@ jobs:
       - name: Build backend docker image
         run: |
           docker build -t sewalink-backend ./backend
-          docker tag sewalink-backend:latest ${{ secrets.ECR_REPOSITORY_URL }}:latest
-          docker push ${{ secrets.ECR_REPOSITORY_URL }}:latest
+          docker tag sewalink-backend:latest ${{ secrets.ECR_REPOSITORY_URL }}/sewalink-backend:latest
+          docker push ${{ secrets.ECR_REPOSITORY_URL }}/sewalink-backend:latest
 
       - name: Update backend ECS service
         run: |
