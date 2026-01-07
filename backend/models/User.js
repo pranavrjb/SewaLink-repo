@@ -11,10 +11,10 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "provider", "admin"],
       default: "user",
     },
-    isEmailVerified: { type: Boolean, default: false },
-    emailVerificationToken: String,
-    emailVerificationExpires: Date,
-  },
+  //   isEmailVerified: { type: Boolean, default: false },
+  //   emailVerificationToken: String,
+  //   emailVerificationExpires: Date,
+   },
   { timestamps: true }
 );
 

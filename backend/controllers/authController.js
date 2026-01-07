@@ -28,12 +28,12 @@ exports.register = async (req, res) => {
       emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hrs
     });
 
-    console.log(
-      `Verify email: http://localhost:5000/api/v1/auth/verify-email/${emailToken}`
-    );
+    // console.log(
+    //   `Verify email: http://localhost:5000/api/v1/auth/verify-email/${emailToken}`
+    // );
 
     res.status(201).json({
-      message: "Registered successfully. Please verify email.",
+      message: "Congratulations! Registered successfully.",
     });
   } catch (error) {
     console.error("Register Error:", error);
@@ -42,36 +42,34 @@ exports.register = async (req, res) => {
 };
 
 //verify email
-exports.verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
+// exports.verifyEmail = async (req, res) => {
+//   try {
+//     const { token } = req.params;
 
-    console.log("Received token:", token);
+//     console.log("Received token:", token);
+//     const user = await User.findOne({
+//       emailVerificationToken: token,
+//       emailVerificationExpires: { $gt: new Date() },
+//     });
 
-    // Use new Date() for UTC-safe comparison
-    const user = await User.findOne({
-      emailVerificationToken: token,
-      emailVerificationExpires: { $gt: new Date() },
-    });
+//     console.log("User found:", user);
 
-    console.log("User found:", user);
+//     if (!user)
+//       return res.status(400).json({ message: "Invalid or expired token" });
 
-    if (!user)
-      return res.status(400).json({ message: "Invalid or expired token" });
+//     // Mark email as verified
+//     user.isEmailVerified = true;
+//     user.emailVerificationToken = undefined;
+//     user.emailVerificationExpires = undefined;
 
-    // Mark email as verified
-    user.isEmailVerified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpires = undefined;
+//     await user.save();
 
-    await user.save();
-
-    res.json({ message: "Email verified successfully" });
-  } catch (error) {
-    console.error("Verify Email Error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+//     res.json({ message: "Email verified successfully" });
+//   } catch (error) {
+//     console.error("Verify Email Error:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 
 
 //login
@@ -83,17 +81,18 @@ exports.login = async (req, res) => {
     if (!user)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    if (!user.isEmailVerified)
-      return res.status(403).json({ message: "Please verify email first" });
+    // if (!user.isEmailVerified)
+    //   return res.status(403).json({ message: "Please verify email first" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
+    // Fixed: Changed token expiration from 15m to 7d for better UX
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "7d" } // Changed from 15m to 7 days
     );
 
     res.json({
@@ -102,10 +101,12 @@ exports.login = async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
+        email: user.email,
         role: user.role,
       },
     });
   } catch (error) {
+    console.error("Login Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

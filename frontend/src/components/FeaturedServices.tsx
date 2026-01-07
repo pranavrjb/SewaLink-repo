@@ -52,9 +52,9 @@ const ServiceCard = ({ title, image, price, rating, reviews, delay }: ServiceCar
 
 const FeaturedServices = () => {
   const services = [
-    { id: 1, title: "Plumbing Services", image: plumbingImg, price: 50, rating: 4.9, reviews: 234 },
-    { id: 2, title: "Electrical Work", image: electricalImg, price: 60, rating: 4.8, reviews: 189 },
-    { id: 3, title: "House Cleaning", image: cleaningImg, price: 40, rating: 4.9, reviews: 312 },
+    { id: 1, title: "Plumbing Services", image: plumbingImg, price: 2500, rating: 4.3, reviews: 24 },
+    { id: 2, title: "Electrical Work", image: electricalImg, price: 5000, rating: 4.2, reviews: 19 },
+    { id: 3, title: "House Cleaning", image: cleaningImg, price: 4000, rating: 4.1, reviews: 31},
   ];
 
   return (
