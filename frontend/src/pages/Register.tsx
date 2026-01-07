@@ -79,10 +79,9 @@ const Register = () => {
         password: form.password,
         role: form.role as "user" | "provider",
       });
-      setSuccess(response.message || "Registration successful! Please check your email to verify your account." );
+      setSuccess(response.message || "Registration successful" );
       toast({
-        title: "Registration Successful!",
-        description:"Please check your email to verify your account before logging in.",
+        title: "Registration Successful!"
       });
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {

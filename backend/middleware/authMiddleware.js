@@ -2,24 +2,32 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 module.exports = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = await User.findById(decoded.id).select("-password");
+    // Get the full user from database
+    const user = await User.findById(decoded.userId).select("name role email");
+    if (!user) return res.status(401).json({ message: "User not found" });
 
-    if (!req.user) {
-      return res.status(401).json({ message: "User not found" });
-    }
+ 
+    req.user = {
+      _id: user._id,           
+      userId: user._id,         
+      name: user.name,
+      role: user.role,
+      email: user.email,
+    };
 
     next();
-  } catch (error) {
+  } catch (err) {
+    console.error("Auth error:", err.message);
     res.status(401).json({ message: "Invalid token" });
   }
 };
