@@ -10,28 +10,22 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Star,
   MapPin,
   Phone,
   Mail,
-  Clock,
-  CheckCircle,
   Calendar,
   MessageSquare,
-  Share2,
-  Heart,
-  Award,
+  CheckCircle,
   Shield,
+  Award,
   ThumbsUp,
   Briefcase,
   Loader2,
   ArrowLeft,
 } from "lucide-react";
 import { servicesApi, Service } from "@/services/servicesApi";
-import { reviewsApi } from "@/services/reviewsApi";
-import { api } from "@/lib/api";
 
 interface ProviderData {
   _id: string;
@@ -52,10 +46,14 @@ interface Review {
     name: string;
     avatar?: string;
   };
+  service?: {
+    _id: string;
+    title: string;
+  };
   rating: number;
   comment: string;
   createdAt: string;
-  helpful?: number;
+  // helpful?: number;
 }
 
 interface BookableService {
@@ -82,31 +80,33 @@ export default function ProviderProfile() {
   const [selectedService, setSelectedService] = useState<BookableService | null>(null);
 
   useEffect(() => {
-  if (!id) return;
+    if (!id) return;
 
-  const fetchProviderData = async () => {
-    try {
-      setIsLoading(true);
+    const fetchProviderData = async () => {
+      try {
+        setIsLoading(true);
 
-      const data = await servicesApi.getProviderProfile(id);
+        // Fetch provider profile with services and reviews
+        const data = await servicesApi.getProviderProfile(id);
 
-      setProvider(data.provider);
-      setServices(data.services || []);
+        setProvider(data.provider);
+        setServices(data.services || []);
+        setReviews(data.reviews || []);
 
-    }catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load provider profile",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      } catch (error: any) {
+        console.error("Failed to load provider profile:", error);
+        toast({
+          title: "Error",
+          description: error.response?.data?.message || "Failed to load provider profile",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  fetchProviderData();
-}, [id, toast]);
-
+    fetchProviderData();
+  }, [id, toast]);
 
   const handleBookService = (service: Service) => {
     setSelectedService({
@@ -250,25 +250,6 @@ export default function ProviderProfile() {
                       >
                         <Calendar className="h-4 w-4 mr-2" />
                         Book Now
-                      </Button>
-                      {/* <Button variant="outline" size="lg">
-                        <MessageSquare className="h-4 w-4" />
-                      </Button> */}
-                    </div>
-
-                    <div className="flex gap-4 mt-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsFavorite(!isFavorite)}
-                        className={isFavorite ? "text-destructive" : ""}
-                      >
-                        <Heart className={`h-4 w-4 mr-1 ${isFavorite ? "fill-current" : ""}`} />
-                        Save
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Share2 className="h-4 w-4 mr-1" />
-                        Share
                       </Button>
                     </div>
                   </div>
@@ -461,6 +442,11 @@ export default function ProviderProfile() {
                               </Avatar>
                               <div>
                                 <p className="font-medium">{review.user?.name || "Anonymous"}</p>
+                                {review.service && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {review.service.title}
+                                  </p>
+                                )}
                                 <p className="text-sm text-muted-foreground">
                                   {new Date(review.createdAt).toLocaleDateString("en-US", {
                                     year: "numeric",
@@ -483,13 +469,15 @@ export default function ProviderProfile() {
                               ))}
                             </div>
                           </div>
-                          <p className="mt-4 text-muted-foreground">{review.comment}</p>
-                          <div className="mt-4 flex items-center gap-4">
+                          {review.comment && (
+                            <p className="mt-4 text-muted-foreground">{review.comment}</p>
+                          )}
+                          {/* <div className="mt-4 flex items-center gap-4">
                             <Button variant="ghost" size="sm" className="text-muted-foreground">
                               <ThumbsUp className="h-4 w-4 mr-1" />
                               Helpful ({review.helpful || 0})
                             </Button>
-                          </div>
+                          </div> */}
                         </CardContent>
                       </Card>
                     ))

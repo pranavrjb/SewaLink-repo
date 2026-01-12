@@ -15,11 +15,13 @@ import {
   MessageSquare,
   Settings,
   Loader2,
-  History
+  History,
+  RefreshCw
 } from "lucide-react";
 import { bookingApi, Booking } from "@/services/bookingApi";
 import { reviewsApi } from "@/services/reviewsApi";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 interface User {
   id: string;
@@ -38,6 +40,11 @@ interface Review {
     _id: string;
     name: string;
   } | string;
+  service?: {
+    _id: string;
+    title: string;
+    category?: string;
+  };
   rating: number;
   comment?: string;
   createdAt: string;
@@ -45,39 +52,69 @@ interface Review {
 
 const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
 
-  const fetchDashboardData = async () => {
-  try {
-    setIsLoading(true);
+  const fetchDashboardData = async (showLoader = true) => {
+    try {
+      if (showLoader) {
+        setIsLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
 
-    const bookingRes = await bookingApi.getProviderBookings();
-    setBookings(bookingRes.bookings || []);
+      // Fetch bookings
+      const bookingRes = await bookingApi.getProviderBookings();
+      setBookings(bookingRes.bookings || []);
 
-    // const reviewRes = await reviewsApi.getProviderReviews();
-    // setReviews(reviewRes.reviews || []);
-  } catch (error) {
-    console.error("Provider dashboard error", error);
-    setBookings([]);
-    setReviews([]);
-  } finally {
-    setIsLoading(false);
-  }
-};
+      // Fetch reviews
+      try {
+        const reviewRes = await reviewsApi.getProviderReviews();
+        setReviews(reviewRes.reviews || []);
+      } catch (reviewError: any) {
+        console.error("Failed to fetch reviews:", reviewError);
+        // Don't fail the whole request if reviews fail
+        setReviews([]);
+        if (reviewError.response?.status === 404) {
+          console.log("No reviews found - this is normal for new providers");
+        }
+      }
 
+      if (!showLoader) {
+        toast({
+          title: "Dashboard Updated",
+          description: "Your dashboard data has been refreshed.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Provider dashboard error", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to load dashboard data",
+        variant: "destructive",
+      });
+      setBookings([]);
+      setReviews([]);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
+    
+    // Auto-refresh every 30 seconds instead of 15 to reduce load
     const interval = setInterval(() => {
-      fetchDashboardData();
-    }, 15000); // every 15 seconds
+      fetchDashboardData(false);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
-
 
   // Filter bookings
   const today = new Date();
@@ -103,7 +140,6 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
     .filter((b) => status(b.status) === "accepted")
     .reduce((sum, b) => sum + (b.service?.price || 0), 0);
 
-
   const monthlyCompleted = completedBookings.filter((b) => {
     const bookingDate = new Date(b.createdAt);
     const thisMonth = new Date();
@@ -128,21 +164,34 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
     <div className="container py-8">
       {/* Welcome Section */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
-            Provider Dashboard
-          </h1>
-          <Badge variant="secondary" className="bg-primary/10 text-primary">
-            Provider
-          </Badge>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
+                Provider Dashboard
+              </h1>
+              <Badge variant="secondary" className="bg-primary/10 text-primary">
+                Provider
+              </Badge>
+            </div>
+            <p className="text-muted-foreground">
+              Welcome back, {user.name}! Here's your business overview.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchDashboardData(false)}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
         </div>
-        <p className="text-muted-foreground">
-          Welcome back, {user.name}! Here's your business overview.
-        </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -262,9 +311,11 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                 <CardTitle>Recent Reviews</CardTitle>
                 <CardDescription>What your customers are saying</CardDescription>
               </div>
-              <Button variant="link" size="sm">
-                View All
-              </Button>
+              {reviews.length > 3 && (
+                <Button variant="link" size="sm">
+                  View All ({reviews.length})
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               {isLoading ? (
@@ -281,7 +332,12 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                           <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
                             <span className="text-sm font-medium">{userName?.charAt(0) || "?"}</span>
                           </div>
-                          <span className="font-medium">{userName || "Anonymous"}</span>
+                          <div>
+                            <span className="font-medium text-sm">{userName || "Anonymous"}</span>
+                            {review.service && (
+                              <p className="text-xs text-muted-foreground">{review.service.title}</p>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-1">
                           {[...Array(5)].map((_, i) => (
@@ -293,7 +349,9 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                           ))}
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">{review.comment}</p>
+                      {review.comment && (
+                        <p className="text-sm text-muted-foreground">{review.comment}</p>
+                      )}
                       <p className="text-xs text-muted-foreground mt-2">
                         {format(new Date(review.createdAt), "MMM d, yyyy")}
                       </p>
@@ -304,6 +362,9 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                 <div className="text-center py-8">
                   <Star className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
                   <p className="text-muted-foreground">No reviews yet</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Complete bookings to start receiving reviews
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -408,13 +469,6 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                 </span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
-              {/* <Button className="w-full justify-between" variant="outline">
-                <span className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Messages
-                </span>
-                <ArrowRight className="w-4 h-4" />
-              </Button> */}
             </CardContent>
           </Card>
 
@@ -436,7 +490,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                   </div>
                   <div className="h-2 bg-secondary rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary rounded-full"
+                      className="h-full bg-primary rounded-full transition-all"
                       style={{
                         width: `${bookings.length > 0
                           ? Math.round((completedBookings.length / bookings.length) * 100)
@@ -452,9 +506,9 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                   </div>
                   <div className="h-2 bg-secondary rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-accent rounded-full"
+                      className="h-full bg-accent rounded-full transition-all"
                       style={{
-                        width: `${reviews.length > 0
+                        width: `${reviews.length > 0 && averageRating !== "N/A"
                           ? (parseFloat(averageRating as string) / 5) * 100
                           : 0}%`
                       }}

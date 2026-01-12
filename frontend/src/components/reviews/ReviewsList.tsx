@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { User, Loader2 } from "lucide-react";
+import { User, Loader2, Briefcase } from "lucide-react";
 import { StarRating } from "./StarRating";
 import { reviewsApi, Review } from "@/services/reviewsApi";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface ReviewsListProps {
   serviceId: string;
   refreshTrigger?: number;
+  showServiceName?: boolean;
 }
 
-export const ReviewsList = ({ serviceId, refreshTrigger }: ReviewsListProps) => {
+export const ReviewsList = ({ serviceId, refreshTrigger, showServiceName = false }: ReviewsListProps) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +68,9 @@ export const ReviewsList = ({ serviceId, refreshTrigger }: ReviewsListProps) => 
           .join("")
           .toUpperCase()
           .slice(0, 2);
+        
+        const serviceName = typeof review.service === "object" ? review.service.title : null;
+        const serviceCategory = typeof review.service === "object" ? review.service.category : null;
 
         return (
           <div
@@ -86,6 +91,20 @@ export const ReviewsList = ({ serviceId, refreshTrigger }: ReviewsListProps) => 
                     {format(new Date(review.createdAt), "MMM d, yyyy")}
                   </time>
                 </div>
+
+                {showServiceName && serviceName && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Briefcase className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground truncate">
+                      {serviceName}
+                    </span>
+                    {serviceCategory && (
+                      <Badge variant="secondary" className="text-xs ml-1">
+                        {serviceCategory}
+                      </Badge>
+                    )}
+                  </div>
+                )}
 
                 <StarRating rating={review.rating} size="sm" className="mt-1" />
 

@@ -88,19 +88,20 @@ export const servicesApi = {
     }
   },
 
-  // GET services by provider ID
+  // GET provider profile with services, reviews, and stats
   getProviderProfile: async (id: string) => {
-  try {
-    const { data } = await api.get(`/provider/${id}`);
-    return data; // { provider, services }
-  } catch (error) {
-    if (isAxiosError(error)) {
-      throw new Error(
-        error.response?.data?.message || "Failed to get Provider Profile"
-      );
+    try {
+      // ✅ CORRECT ENDPOINT - Calls the backend route that returns reviews
+      const { data } = await api.get(`/services/provider/${id}/profile`);
+      return data; // { provider, services, reviews, stats }
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(
+          error.response?.data?.message || "Failed to get Provider Profile"
+        );
+      }
+      throw new Error("Failed to get Provider Profile");
     }
-    throw new Error("Failed to get Provider Profile");
-  }
-},
+  },
 
 };

@@ -1,26 +1,28 @@
 const express = require("express");
 const router = express.Router();
-
+const authMiddleware = require("../middleware/authMiddleware");
+const providerMiddleware = require("../middleware/providerMiddleware");
 const {
-  addService,
-  getServices,
-  getServiceById,
+  getAllServices,
+  getService,
+  getProviderProfile,
+  createService,
+  updateService,
   deleteService,
-  getServicesByProvider,
+  getServicesByCategory,
+  searchServices,
 } = require("../controllers/serviceController");
 
-const serviceAuth = require("../middleware/serviceAuth");
+// Public routes
+router.get("/", getAllServices);
+router.get("/search", searchServices);
+router.get("/category/:category", getServicesByCategory);
+router.get("/provider/:providerId/profile", getProviderProfile); // NEW - Get provider profile with reviews
+router.get("/:id", getService);
 
-// PUBLIC
-router.get("/", getServices);
-
-// ⚠️ provider route MUST be before :id
-router.get("/provider/:providerId", getServicesByProvider);
-
-router.get("/:id", getServiceById);
-
-// PROTECTED (provider only)
-router.post("/add", serviceAuth, addService);
-router.delete("/:id", serviceAuth, deleteService);
+// Protected routes (require authentication)
+router.post("/", authMiddleware, providerMiddleware, createService);
+router.put("/:id", authMiddleware, providerMiddleware, updateService);
+router.delete("/:id", authMiddleware, providerMiddleware, deleteService);
 
 module.exports = router;

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ReviewForm } from "@/components/reviews";
+import { ReviewForm, ServiceRatingBadge } from "@/components/reviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +88,8 @@ export default function MyBookings() {
   // Review state
   const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
   const [reviewedBookings, setReviewedBookings] = useState<Set<string>>(new Set());
+  // const [isMandatoryReview, setIsMandatoryReview] = useState(false);
+  const [pendingReviewsChecked, setPendingReviewsChecked] = useState(false);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,6 +122,20 @@ export default function MyBookings() {
       fetchBookings();
     }
   }, [user]);
+
+  // Check for completed bookings that need mandatory reviews
+  useEffect(() => {
+    if (!pendingReviewsChecked && bookings.length > 0) {
+      const completedWithoutReview = bookings.find(
+        (b) => b.status === "completed" && !reviewedBookings.has(b._id)
+      );
+      if (completedWithoutReview) {
+        setReviewBooking(completedWithoutReview);
+        setIsMandatoryReview(true);
+      }
+      setPendingReviewsChecked(true);
+    }
+  }, [bookings, reviewedBookings, pendingReviewsChecked]);
 
   const handleCancelBooking = async (bookingId: string) => {
     setCancellingId(bookingId);
@@ -282,6 +298,13 @@ export default function MyBookings() {
                   <MapPin className="h-4 w-4" />
                   <span className="truncate">{booking.serviceAddress}</span>
                 </div>
+                {booking.service?._id && (
+                  <ServiceRatingBadge 
+                    serviceId={booking.service._id} 
+                    showReviewCount 
+                    showLabel={false}
+                  />
+                )}
               </div>
 
               {booking.notes && (
@@ -352,12 +375,15 @@ export default function MyBookings() {
 
                   {booking.status === "completed" && !reviewedBookings.has(booking._id) && (
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
-                      onClick={() => setReviewBooking(booking)}
+                      onClick={() => {
+                        setReviewBooking(booking);
+                        // setIsMandatoryReview(true);
+                      }}
                     >
                       <Star className="h-4 w-4 mr-1" />
-                      Review
+                      Review Required
                     </Button>
                   )}
 
@@ -919,12 +945,29 @@ export default function MyBookings() {
       {reviewBooking && (
         <ReviewForm
           open={!!reviewBooking}
-          onOpenChange={(open) => !open && setReviewBooking(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setReviewBooking(null);
+              setIsMandatoryReview(false);
+            }
+          }}
           bookingId={reviewBooking._id}
           serviceName={reviewBooking.service?.title || "Service"}
+          mandatory={isMandatoryReview}
           onSuccess={() => {
             setReviewedBookings((prev) => new Set([...prev, reviewBooking._id]));
             setReviewBooking(null);
+            setIsMandatoryReview(false);
+            // Check for more pending reviews
+            const nextUnreviewed = bookings.find(
+              (b) => b.status === "completed" && !reviewedBookings.has(b._id) && b._id !== reviewBooking._id
+            );
+            if (nextUnreviewed) {
+              setTimeout(() => {
+                setReviewBooking(nextUnreviewed);
+                setIsMandatoryReview(true);
+              }, 500);
+            }
           }}
         />
       )}
