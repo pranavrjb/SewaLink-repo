@@ -29,6 +29,7 @@ import Contact from "./pages/Contact";
 import Unauthorized from "./pages/Unauthorized";
 import { UserManagement, ServiceManagement } from "./pages/admin";
 import NotFound from "./pages/NotFound";
+import Reviews from "./pages/Reviews";
 
 const queryClient = new QueryClient();
 const cld = new Cloudinary({
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/become-provider" element={<BecomeProvider />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/reviews" element={<Reviews />} />
 
             {/* Guest only routes (redirect if authenticated) */}
             <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
