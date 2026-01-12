@@ -12,7 +12,7 @@ const Index = () => {
       <Navbar />
       <main>
         <HeroSection />
-        <FeaturedServices />
+        {/* <FeaturedServices /> */}
         <WhyChooseUs />
         <Testimonials />
         <CTASection />

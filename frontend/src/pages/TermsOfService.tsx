@@ -150,9 +150,9 @@ const TermsOfService = () => {
                     For questions about these Terms of Service, please contact us at:
                   </p>
                   <p className="text-muted-foreground mt-2">
-                    Email: legal@sewalink.com<br />
-                    Phone: +1 (555) 123-4567<br />
-                    Address: 123 Service Street, Tech Hub, City 12345
+                    Email: legal@sewalink.com.np<br />
+                    Phone: +977 9712312312<br />
+                    Address: Basundhara, Kathmandu, Nepal
                   </p>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CTASection = () => {
   return (
@@ -17,10 +18,12 @@ const CTASection = () => {
             Join thousands of happy customers who trust SewaLink for all their home service needs.
           </p>
           <div className="flex flex-wrap justify-center gap-4 animate-fade-up delay-200">
-            <Button variant="hero" >
-              Book a Service Now
-              <ArrowRight className="w-5 h-5" />
-            </Button>
+            <Link to="/services">
+              <Button variant="hero">
+                Book a Service Now
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
             {/* <Button variant="hero-outline">
               Download the App
             </Button> */}
