@@ -219,18 +219,18 @@ const Profile = () => {
           <h1 className="text-3xl font-bold mb-8">Profile Settings</h1>
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
+            {/* <TabsList className="grid w-full ">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="security">Security</TabsTrigger>
-            </TabsList>
+            </TabsList> */}
 
             <TabsContent value="profile">
               <Card>
                 <CardHeader>
                   <CardTitle>Profile Information</CardTitle>
-                  <CardDescription>
+                  {/* <CardDescription>
                     Update your account information and profile picture
-                  </CardDescription>
+                  </CardDescription> */}
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleProfileUpdate} className="space-y-6">
@@ -239,28 +239,28 @@ const Profile = () => {
                       <div className="relative">
                         <Avatar className="h-24 w-24 cursor-pointer" onClick={handleAvatarClick}>
                           <AvatarImage src={avatarPreview || undefined} />
-                          <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                          <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
                             {getInitials(user?.name || "U")}
                           </AvatarFallback>
                         </Avatar>
-                        <button
+                        {/* <button
                           type="button"
                           onClick={handleAvatarClick}
                           className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
                         >
                           <Camera className="h-4 w-4" />
-                        </button>
-                        <input
+                        </button> */}
+                        {/* <input
                           ref={fileInputRef}
                           type="file"
                           accept="image/*"
                           onChange={handleAvatarChange}
                           className="hidden"
-                        />
+                        /> */}
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      {/* <p className="text-sm text-muted-foreground">
                         Click to upload a new photo (max 5MB)
-                      </p>
+                      </p> */}
                     </div>
 
                     <Separator />
@@ -282,7 +282,7 @@ const Profile = () => {
                         />
                       </div>
 
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <Label htmlFor="email" className="flex items-center gap-2">
                           <Mail className="h-4 w-4" />
                           Email Address
@@ -296,9 +296,9 @@ const Profile = () => {
                           }
                           placeholder="Enter your email"
                         />
-                      </div>
+                      </div> */}
 
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <Label htmlFor="phone" className="flex items-center gap-2">
                           <Phone className="h-4 w-4" />
                           Phone Number
@@ -312,7 +312,7 @@ const Profile = () => {
                           }
                           placeholder="Enter your phone number"
                         />
-                      </div>
+                      </div> */}
 
                       <div className="space-y-2">
                         <Label className="text-muted-foreground">Account Type</Label>
@@ -322,7 +322,7 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isUpdating}>
+                    {/* <Button type="submit" className="w-full" disabled={isUpdating}>
                       {isUpdating ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
@@ -334,13 +334,13 @@ const Profile = () => {
                           Save Changes
                         </>
                       )}
-                    </Button>
+                    </Button> */}
                   </form>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="security">
+            {/* <TabsContent value="security">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -432,7 +432,7 @@ const Profile = () => {
                   </form>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </TabsContent> */}
           </Tabs>
         </div>
       </div>
