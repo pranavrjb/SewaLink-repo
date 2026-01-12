@@ -12,11 +12,8 @@ module.exports = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Get the full user from database
     const user = await User.findById(decoded.userId).select("name role email");
     if (!user) return res.status(401).json({ message: "User not found" });
-
- 
     req.user = {
       _id: user._id,           
       userId: user._id,         
@@ -24,7 +21,6 @@ module.exports = async (req, res, next) => {
       role: user.role,
       email: user.email,
     };
-
     next();
   } catch (err) {
     console.error("Auth error:", err.message);

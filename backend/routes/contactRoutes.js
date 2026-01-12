@@ -3,12 +3,12 @@ const router = express.Router();
 
 const { submitContactForm, getAllContacts } = require("../controllers/contactController");
 const authMiddleware = require("../middleware/authMiddleware");
-const { adminAuth } = require("../middleware/adminAuth");
+const {adminMiddleware}  = require("../middleware/adminAuth"); 
 
-// Public route
+// Public route – anyone can submit contact form
 router.post("/", submitContactForm);
 
-// Admin route
-router.get("/", authMiddleware, adminAuth, getAllContacts);
+// Admin route – protected
+router.get("/", authMiddleware, adminMiddleware, getAllContacts);
 
 module.exports = router;

@@ -16,6 +16,7 @@ const contactRoutes = require("./routes/contactRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const providerRoutes = require("./routes/providerRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 app.get("/", (req, res) => {
     res.send("SewaLink API running...");
 });
@@ -30,5 +31,6 @@ app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/provider", providerRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 module.exports = app;

@@ -5,41 +5,42 @@ const User = require("../models/User");
 const { completeBooking } = require("./bookingController");
 
 //register
-
 exports.register = async (req, res) => {
   try {
     const { name, email, phone, password, role } = req.body;
 
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const allowedRoles = ["user", "provider"];
+    const userRole = allowedRoles.includes(role) ? role : "user";
+
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const emailToken = crypto.randomBytes(32).toString("hex");
-
-    const user = await User.create({
+    await User.create({
       name,
       email,
       phone,
       password: hashedPassword,
-      role,
-      emailVerificationToken: emailToken,
-      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hrs
+      role: userRole, 
     });
 
-    // console.log(
-    //   `Verify email: http://localhost:5000/api/v1/auth/verify-email/${emailToken}`
-    // );
-
     res.status(201).json({
-      message: "Congratulations! Registered successfully.",
+      message: "Registered successfully",
     });
   } catch (error) {
     console.error("Register Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 //verify email
 // exports.verifyEmail = async (req, res) => {
@@ -78,21 +79,15 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "Invalid credentials" });
-
-    // if (!user.isEmailVerified)
-    //   return res.status(403).json({ message: "Please verify email first" });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    // Fixed: Changed token expiration from 15m to 7d for better UX
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" } // Changed from 15m to 7 days
+      { expiresIn: "7d" }
     );
 
     res.json({
