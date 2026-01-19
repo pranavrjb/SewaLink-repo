@@ -88,7 +88,7 @@ export default function MyBookings() {
   // Review state
   const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
   const [reviewedBookings, setReviewedBookings] = useState<Set<string>>(new Set());
-  // const [isMandatoryReview, setIsMandatoryReview] = useState(false);
+  const [isMandatoryReview, setIsMandatoryReview] = useState(false);
   const [pendingReviewsChecked, setPendingReviewsChecked] = useState(false);
 
   // Filter states

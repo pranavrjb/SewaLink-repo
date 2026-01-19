@@ -8,7 +8,6 @@ exports.addReview = async (req, res) => {
   try {
     const { bookingId, rating, comment } = req.body;
 
-    // Validate input
     if (!bookingId || !rating) {
       return res.status(400).json({ message: "Booking ID and rating are required" });
     }
@@ -17,7 +16,6 @@ exports.addReview = async (req, res) => {
       return res.status(400).json({ message: "Rating must be between 1 and 5" });
     }
 
-    // Find booking with populated service
     const booking = await Booking.findById(bookingId).populate("service");
     
     if (!booking) {
@@ -29,8 +27,6 @@ exports.addReview = async (req, res) => {
     console.log("Req user ID:", req.user._id);
     console.log("Req user userId:", req.user.userId);
 
-    // Fix: Use .equals() method for MongoDB ObjectId comparison
-    // This works better than toString() comparison
     if (!booking.user.equals(req.user._id)) {
       return res.status(403).json({ 
         message: "Not authorized to review this booking",

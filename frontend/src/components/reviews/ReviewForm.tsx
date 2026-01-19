@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -20,7 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StarRating } from "./StarRating";
 import { reviewsApi } from "@/services/reviewsApi";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +37,8 @@ interface ReviewFormProps {
   bookingId: string;
   serviceName: string;
   onSuccess?: () => void;
-  mandatory?: boolean;
+  // We keep the prop for compatibility, but it won't enforce locking anymore
+  mandatory?: boolean; 
 }
 
 export const ReviewForm = ({
@@ -47,7 +47,6 @@ export const ReviewForm = ({
   bookingId,
   serviceName,
   onSuccess,
-  mandatory = false,
 }: ReviewFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -60,16 +59,8 @@ export const ReviewForm = ({
     },
   });
 
+  // Simplified: Always allows closing
   const handleOpenChange = (newOpen: boolean) => {
-    // If mandatory and trying to close without submitting, prevent it
-    if (mandatory && !newOpen && open) {
-      toast({
-        title: "Review Required",
-        description: "Please submit your review before continuing.",
-        variant: "destructive",
-      });
-      return;
-    }
     onOpenChange(newOpen);
   };
 
@@ -103,11 +94,7 @@ export const ReviewForm = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent 
-        className="sm:max-w-md"
-        onPointerDownOutside={(e) => mandatory && e.preventDefault()}
-        onEscapeKeyDown={(e) => mandatory && e.preventDefault()}
-      >
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Rate Your Experience</DialogTitle>
           <DialogDescription>
@@ -115,14 +102,7 @@ export const ReviewForm = ({
           </DialogDescription>
         </DialogHeader>
 
-        {mandatory && (
-          <Alert variant="default" className="border-primary/50 bg-primary/5">
-            <AlertTriangle className="h-4 w-4 text-primary" />
-            <AlertDescription className="text-sm">
-              Your feedback is required to help us improve our services.
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Removed the Mandatory Alert here */}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -178,17 +158,17 @@ export const ReviewForm = ({
             />
 
             <div className="flex gap-3 justify-end">
-              {!mandatory && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-              )}
-              <Button type="submit" disabled={isSubmitting} className={mandatory ? "w-full" : ""}>
+              {/* Cancel button is now always visible */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Skip / Cancel
+              </Button>
+              
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Submit Review
               </Button>
