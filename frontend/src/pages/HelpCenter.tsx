@@ -51,8 +51,8 @@ const HelpCenter = () => {
               <div className="flex max-w-xl mx-auto gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search for help..." 
+                  <Input
+                    placeholder="Search for help..."
                     className="pl-10 h-12"
                   />
                 </div>
@@ -97,8 +97,8 @@ const HelpCenter = () => {
         <section className="py-16 bg-muted/30">
           <div className="container">
             <h2 className="text-2xl font-heading font-bold mb-8 text-center">Need More Help?</h2>
-            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <Card className="text-center">
+            <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+              {/* <Card className="text-center">
                 <CardContent className="pt-6">
                   <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <MessageCircle className="w-7 h-7 text-primary" />
@@ -109,7 +109,7 @@ const HelpCenter = () => {
                   </p>
                   <Button variant="outline" className="w-full">Start Chat</Button>
                 </CardContent>
-              </Card>
+              </Card> */}
               <Card className="text-center">
                 <CardContent className="pt-6">
                   <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -119,7 +119,9 @@ const HelpCenter = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     Get help via email within 24 hours
                   </p>
-                  <Button variant="outline" className="w-full">Send Email</Button>
+                  <a href="mailto:support@sewalink.com.np">
+                    <Button variant="outline" className="w-full">Send Email</Button>
+                  </a>
                 </CardContent>
               </Card>
               <Card className="text-center">
@@ -131,7 +133,9 @@ const HelpCenter = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     Call us Mon-Fri, 9am-6pm
                   </p>
-                  <Button variant="outline" className="w-full">Call Now</Button>
+                  <a href="tel:+9779712312312">
+                    <Button variant="outline" className="w-full">Call Now</Button>
+                  </a>
                 </CardContent>
               </Card>
             </div>

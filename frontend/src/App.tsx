@@ -30,6 +30,7 @@ import Unauthorized from "./pages/Unauthorized";
 import { UserManagement, ServiceManagement } from "./pages/admin";
 import NotFound from "./pages/NotFound";
 import Reviews from "./pages/Reviews";
+import MyServices from "./pages/MyServices";
 
 const queryClient = new QueryClient();
 const cld = new Cloudinary({
@@ -80,6 +81,7 @@ const App = () => (
 
             {/* Protected routes - providers only */}
             <Route path="/provider-bookings" element={<ProtectedRoute allowedRoles={["provider"]}><ProviderBookings /></ProtectedRoute>} />
+            <Route path="/my-services" element={<ProtectedRoute allowedRoles={["provider"]}><MyServices /></ProtectedRoute>} />
 
             {/* Unauthorized page */}
             <Route path="/unauthorized" element={<Unauthorized />} />

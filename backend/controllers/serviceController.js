@@ -6,27 +6,22 @@ const User = require("../models/User");
 exports.getAllServices = async (req, res) => {
   try {
     const { category, search, minPrice, maxPrice } = req.query;
-
     let query = {};
-
     if (category) {
       query.category = category;
     }
-
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ];
     }
-
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
-
-    const services = await Service.find(query)
+    const services = await Service.find(query, { isHidden: false })
       .populate("provider", "name email")
       .sort({ createdAt: -1 });
 
@@ -46,7 +41,6 @@ exports.getService = async (req, res) => {
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
     }
-
     res.json({ service });
   } catch (error) {
     console.error("Get service error:", error);
@@ -58,29 +52,20 @@ exports.getService = async (req, res) => {
 exports.getProviderProfile = async (req, res) => {
   try {
     const { providerId } = req.params;
-
-    // Get provider information
     const provider = await User.findById(providerId).select("-password");
-
     if (!provider) {
       return res.status(404).json({ message: "Provider not found" });
     }
-
     if (provider.role !== "provider") {
       return res.status(400).json({ message: "User is not a provider" });
     }
-
-    // Get all services by this provider
     const services = await Service.find({ provider: providerId }).sort({ createdAt: -1 });
-
-    // Get all reviews for this provider's services
     const serviceIds = services.map(s => s._id);
     const reviews = await Review.find({ service: { $in: serviceIds } })
       .populate("user", "name email avatar")
       .populate("service", "title")
       .sort({ createdAt: -1 });
 
-    // Calculate stats
     const stats = {
       totalServices: services.length,
       totalReviews: reviews.length,
@@ -114,21 +99,20 @@ exports.getProviderProfile = async (req, res) => {
 // Create service (provider only)
 exports.createService = async (req, res) => {
   try {
-    const { title, description, category, price, location } = req.body;
+    const { title, description, category, price, phone, location } = req.body;
 
-    if (!title || !description || !category || !price) {
+    if (!title || !description || !category || !price || !phone || !location) {
       return res.status(400).json({ message: "Please provide all required fields" });
     }
-
     const service = await Service.create({
       title,
       description,
       category,
       price,
+      phone,
       location,
       provider: req.user._id,
     });
-
     const populatedService = await Service.findById(service._id)
       .populate("provider", "name email");
 
@@ -146,29 +130,30 @@ exports.createService = async (req, res) => {
 exports.updateService = async (req, res) => {
   try {
     const service = await Service.findById(req.params.id);
-
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
     }
-
-    // Check if user is the service provider
+    
+    // Check ownership
     if (service.provider.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not authorized to update this service" });
     }
 
-    const { title, description, category, price, location } = req.body;
+    // Extract all fields including phone and isHidden
+    const { title, description, category, price, location, phone, isHidden } = req.body;
 
     if (title) service.title = title;
     if (description) service.description = description;
     if (category) service.category = category;
     if (price) service.price = price;
-    if (location !== undefined) service.location = location;
-
+    if (location) service.location = location;
+    if (phone) service.phone = phone; 
+    if (isHidden !== undefined) {
+      service.isHidden = isHidden;
+    }
     await service.save();
-
     const updatedService = await Service.findById(service._id)
       .populate("provider", "name email");
-
     res.json({ 
       message: "Service updated successfully", 
       service: updatedService 

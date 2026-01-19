@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { api } from "@/lib/api";
+// Removed unused 'api' import to clean up warnings
 import {
   Calendar,
   Clock,
@@ -12,11 +12,11 @@ import {
   ArrowRight,
   CheckCircle,
   TrendingUp,
-  MessageSquare,
   Settings,
   Loader2,
   History,
-  RefreshCw
+  RefreshCw,
+  Briefcase,
 } from "lucide-react";
 import { bookingApi, Booking } from "@/services/bookingApi";
 import { reviewsApi } from "@/services/reviewsApi";
@@ -59,7 +59,11 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
 
-  const fetchDashboardData = async (showLoader = true) => {
+  // 1. Wrap fetch in useCallback so it's stable across renders
+  const fetchDashboardData = useCallback(async (showLoader = true) => {
+    // Safety check: Don't fetch if user isn't ready
+    if (!user || !user.id) return;
+
     try {
       if (showLoader) {
         setIsLoading(true);
@@ -69,18 +73,19 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
 
       // Fetch bookings
       const bookingRes = await bookingApi.getProviderBookings();
-      setBookings(bookingRes.bookings || []);
+      // Safety check: ensure .bookings exists, fallback to empty array
+      setBookings(bookingRes?.bookings || []);
 
       // Fetch reviews
       try {
         const reviewRes = await reviewsApi.getProviderReviews();
-        setReviews(reviewRes.reviews || []);
+        setReviews(reviewRes?.reviews || []);
       } catch (reviewError: any) {
         console.error("Failed to fetch reviews:", reviewError);
-        // Don't fail the whole request if reviews fail
-        setReviews([]);
-        if (reviewError.response?.status === 404) {
-          console.log("No reviews found - this is normal for new providers");
+        setReviews([]); 
+        // Only log 404s if it's strictly necessary for debugging
+        if (reviewError.response?.status !== 404) {
+             console.warn("Review fetch error", reviewError);
         }
       }
 
@@ -97,74 +102,100 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
         description: error.response?.data?.message || "Failed to load dashboard data",
         variant: "destructive",
       });
-      setBookings([]);
-      setReviews([]);
+      // Don't clear data on refresh error, keep old data visible
+      if (showLoader) {
+        setBookings([]);
+        setReviews([]);
+      }
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [user, toast]); // Dependency on 'user' ensures refetch if user context updates
 
+  // 2. Updated useEffect to depend on fetchDashboardData
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData(true);
     
-    // Auto-refresh every 30 seconds instead of 15 to reduce load
     const interval = setInterval(() => {
       fetchDashboardData(false);
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchDashboardData]);
 
-  // Filter bookings
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const status = (s?: string) => s?.toLowerCase() || "";
+  // 3. Use useMemo for heavy filtering logic to improve performance
+  const { 
+    todaysBookings, 
+    completedBookings, 
+    monthlyCompleted, 
+    pendingEarnings, 
+    totalEarnings, 
+    monthlyEarnings, 
+    weeklyEarnings 
+  } = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const status = (s?: string) => s?.toLowerCase() || "";
 
-  const completedBookings = bookings.filter(
-    (b) => status(b.status) === "completed"
-  );
+    const completed = bookings.filter((b) => status(b.status) === "completed");
 
-  const todaysBookings = bookings.filter((b) => {
-    const bookingDate = new Date(b.preferredDate);
-    return (
-      bookingDate >= today &&
-      bookingDate < tomorrow &&
-      ["pending", "accepted"].includes(status(b.status))
-    );
-  });
+    const todayBookings = bookings.filter((b) => {
+      if (!b.preferredDate) return false;
+      const bookingDate = new Date(b.preferredDate);
+      return (
+        bookingDate >= today &&
+        bookingDate < tomorrow &&
+        ["pending", "accepted"].includes(status(b.status))
+      );
+    });
 
-  const pendingEarnings = bookings
-    .filter((b) => status(b.status) === "accepted")
-    .reduce((sum, b) => sum + (b.service?.price || 0), 0);
+    const pendingEarn = bookings
+      .filter((b) => status(b.status) === "accepted")
+      .reduce((sum, b) => sum + (b.service?.price || 0), 0);
 
-  const monthlyCompleted = completedBookings.filter((b) => {
-    const bookingDate = new Date(b.createdAt);
-    const thisMonth = new Date();
-    return bookingDate.getMonth() === thisMonth.getMonth() &&
-      bookingDate.getFullYear() === thisMonth.getFullYear();
-  });
+    const monthCompleted = completed.filter((b) => {
+      const bookingDate = new Date(b.createdAt);
+      const thisMonth = new Date();
+      return bookingDate.getMonth() === thisMonth.getMonth() &&
+        bookingDate.getFullYear() === thisMonth.getFullYear();
+    });
 
-  const totalEarnings = completedBookings.reduce((sum, b) => sum + (b.service?.price || 0), 0);
-  const monthlyEarnings = monthlyCompleted.reduce((sum, b) => sum + (b.service?.price || 0), 0);
-  const weeklyEarnings = completedBookings.filter((b) => {
-    const bookingDate = new Date(b.createdAt);
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    return bookingDate >= oneWeekAgo;
-  }).reduce((sum, b) => sum + (b.service?.price || 0), 0);
+    const totalEarn = completed.reduce((sum, b) => sum + (b.service?.price || 0), 0);
+    const monthEarn = monthCompleted.reduce((sum, b) => sum + (b.service?.price || 0), 0);
+    
+    const weekEarn = completed.filter((b) => {
+      const bookingDate = new Date(b.createdAt);
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      return bookingDate >= oneWeekAgo;
+    }).reduce((sum, b) => sum + (b.service?.price || 0), 0);
 
-  const averageRating = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-    : "N/A";
+    return {
+      todaysBookings: todayBookings,
+      completedBookings: completed,
+      monthlyCompleted: monthCompleted,
+      pendingEarnings: pendingEarn,
+      totalEarnings: totalEarn,
+      monthlyEarnings: monthEarn,
+      weeklyEarnings: weekEarn
+    };
+  }, [bookings]);
+
+  const averageRating = useMemo(() => {
+    return reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+      : "N/A";
+  }, [reviews]);
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 max-w-7xl mx-auto px-4 sm:px-6">
       {/* Welcome Section */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
@@ -175,7 +206,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
               </Badge>
             </div>
             <p className="text-muted-foreground">
-              Welcome back, {user.name}! Here's your business overview.
+              Welcome back, {user?.name || "Provider"}! Here's your business overview.
             </p>
           </div>
           <Button
@@ -183,15 +214,16 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
             size="sm"
             onClick={() => fetchDashboardData(false)}
             disabled={isRefreshing}
+            className="w-full md:w-auto"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-            Refresh
+            Refresh Data
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -247,8 +279,8 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Today's Schedule */}
-        <div className="lg:col-span-2">
+        {/* Today's Schedule & Reviews */}
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -268,19 +300,19 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                 todaysBookings.map((booking) => (
                   <div
                     key={booking._id}
-                    className="flex items-center justify-between p-4 bg-secondary/30 rounded-xl"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-secondary/30 rounded-xl gap-4"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-primary/20 flex flex-shrink-0 items-center justify-center">
                         <Clock className="w-5 h-5 text-primary" />
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground">{booking.service?.title || "Service"}</h4>
-                        <p className="text-sm text-muted-foreground">{booking.user?.name || "Customer"}</p>
-                        <p className="text-xs text-muted-foreground">{booking.serviceAddress}</p>
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-foreground truncate">{booking.service?.title || "Service"}</h4>
+                        <p className="text-sm text-muted-foreground truncate">{booking.user?.name || "Customer"}</p>
+                        <p className="text-xs text-muted-foreground truncate">{booking.serviceAddress}</p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <p className="font-semibold text-primary">
                         {format(new Date(booking.preferredDate), "h:mm a")}
                       </p>
@@ -305,7 +337,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
           </Card>
 
           {/* Recent Reviews */}
-          <Card className="mt-6">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Recent Reviews</CardTitle>
@@ -324,16 +356,18 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                 </div>
               ) : reviews.length > 0 ? (
                 reviews.slice(0, 3).map((review) => {
-                  const userName = typeof review.user === 'object' ? review.user?.name : null;
+                  // Type guard for review.user
+                  const userName = typeof review.user === 'object' && review.user ? review.user.name : "Anonymous";
+                  
                   return (
                     <div key={review._id} className="p-4 border border-border rounded-xl">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                            <span className="text-sm font-medium">{userName?.charAt(0) || "?"}</span>
+                            <span className="text-sm font-medium">{userName.charAt(0)}</span>
                           </div>
                           <div>
-                            <span className="font-medium text-sm">{userName || "Anonymous"}</span>
+                            <span className="font-medium text-sm">{userName}</span>
                             {review.service && (
                               <p className="text-xs text-muted-foreground">{review.service.title}</p>
                             )}
@@ -343,8 +377,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-4 h-4 ${i < review.rating ? "fill-accent text-accent" : "text-muted"
-                                }`}
+                              className={`w-4 h-4 ${i < review.rating ? "fill-accent text-accent" : "text-muted"}`}
                             />
                           ))}
                         </div>
@@ -455,6 +488,13 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              <Button className="w-full justify-between" variant="outline" onClick={() => navigate("/my-services")}>
+                <span className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4" />
+                  My Services
+                </span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
               <Button className="w-full justify-between" variant="outline" onClick={() => navigate("/provider-bookings")}>
                 <span className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />

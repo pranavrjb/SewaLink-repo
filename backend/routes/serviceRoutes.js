@@ -17,11 +17,11 @@ const {
 router.get("/", getAllServices);
 router.get("/search", searchServices);
 router.get("/category/:category", getServicesByCategory);
-router.get("/provider/:providerId/profile", getProviderProfile); // NEW - Get provider profile with reviews
+router.get("/provider/:providerId/profile", getProviderProfile); 
 router.get("/:id", getService);
 
 // Protected routes (require authentication)
-router.post("/", authMiddleware, providerMiddleware, createService);
+router.post("/add", authMiddleware, providerMiddleware, createService);
 router.put("/:id", authMiddleware, providerMiddleware, updateService);
 router.delete("/:id", authMiddleware, providerMiddleware, deleteService);
 
