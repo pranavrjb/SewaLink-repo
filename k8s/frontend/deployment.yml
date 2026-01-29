@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sewalink-frontend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sewalink-frontend 
+  template:
+    metadata:
+      labels:
+        app: sewalink-frontend
+    spec:
+      containers:
+        - name: sewalink-frontend-container
+          image: pranavrjb12/sewalink-frontend:v1
+          ports:
+          - containerPort: 80
+          env:
+          - name: REACT_APP_BACKEND_URL
+            value: "http://192.168.39.66:30005"

@@ -28,12 +28,12 @@ jobs:
           docker tag sewalink-frontend:latest ${{ secrets.ECR_FRONTEND_REPO }}:latest
           docker push ${{ secrets.ECR_FRONTEND_REPO }}:latest
 
-      - name: Update frontend ECS service
-        run: |
-          aws ecs update-service \
-           --cluster ${{ secrets.ECS_CLUSTER }} \
-           --service ${{ secrets.ECS_FRONTEND_SERVICE }} \
-           --force-new-deployment
+      # - name: Update frontend ECS service
+      #   run: |
+      #     aws ecs update-service \
+      #      --cluster ${{ secrets.ECS_CLUSTER }} \
+      #      --service ${{ secrets.ECS_FRONTEND_SERVICE }} \
+      #      --force-new-deployment
 
       #backend image build and push
       - name: Build backend docker image
@@ -42,9 +42,10 @@ jobs:
           docker tag sewalink-backend:latest ${{ secrets.ECR_BACKEND_REPO }}:latest
           docker push ${{ secrets.ECR_BACKEND_REPO }}:latest
 
-      - name: Update backend ECS service
-        run: |
-          aws ecs update-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_BACKEND_SERVICE }} \
-            --force-new-deployment
+      # - name: Update backend ECS service
+      #   run: |
+      #     aws ecs update-service \
+      #       --cluster ${{ secrets.ECS_CLUSTER }} \
+      #       --service ${{ secrets.ECS_BACKEND_SERVICE }} \
+      #       --force-new-deployment
+      

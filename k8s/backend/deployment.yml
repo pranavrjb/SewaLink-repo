@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+ name: sewalink-backend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sewalink-backend
+  template:
+    metadata: 
+      labels: 
+        app: sewalink-backend
+    spec:
+      containers:
+      - name: sewalink-backend-container
+        image: pranavrjb12/sewalink-backend:v1
+        ports:
+        - containerPort: 5000
+        env:
+        - name: NODE_ENV
+          value: "development"
+        - name: MONGO_URI
+          value: mongodb+srv://sewalinkdb:pranavrjb3377@sewalinkdb.kcozp7d.mongodb.net/sewalinkdb?retryWrites=true&w=majority
+        
