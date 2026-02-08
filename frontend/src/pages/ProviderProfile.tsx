@@ -212,11 +212,11 @@ export default function ProviderProfile() {
                         <CheckCircle className="h-5 w-5 text-primary" />
                       </div>
 
-                      <div className="flex items-center justify-center gap-1">
+                      {/* <div className="flex items-center justify-center gap-1">
                         <Star className="h-5 w-5 fill-accent text-accent" />
                         <span className="font-semibold">{averageRating.toFixed(1)}</span>
                         <span className="text-muted-foreground">({reviews.length} reviews)</span>
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="flex flex-wrap gap-2 mt-4 justify-center">
@@ -230,15 +230,15 @@ export default function ProviderProfile() {
                       </Badge>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mt-6 w-full text-center">
+                    <div className="grid grid-cols-1 gap-4 mt-6 w-full text-center">
                       <div className="p-3 bg-muted rounded-lg">
                         <p className="text-2xl font-bold text-primary">{services.length}</p>
                         <p className="text-xs text-muted-foreground">Services</p>
                       </div>
-                      <div className="p-3 bg-muted rounded-lg">
+                      {/* <div className="p-3 bg-muted rounded-lg">
                         <p className="text-2xl font-bold text-primary">{reviews.length}</p>
                         <p className="text-xs text-muted-foreground">Reviews</p>
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="flex gap-2 mt-6 w-full">
@@ -337,9 +337,9 @@ export default function ProviderProfile() {
               <TabsTrigger value="services" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Services & Pricing ({services.length})
               </TabsTrigger>
-              <TabsTrigger value="reviews" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              {/* <TabsTrigger value="reviews" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Reviews ({reviews.length})
-              </TabsTrigger>
+              </TabsTrigger> */}
             </TabsList>
 
             {/* Services Tab */}

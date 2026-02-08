@@ -90,8 +90,10 @@ export const bookingApi = {
   },
 
   // Cancel booking (user)
+  // Cancel booking (user or provider)
   cancelBooking: async (bookingId: string): Promise<{ message: string; booking: Booking }> => {
-    return bookingApi.updateBookingStatus(bookingId, "cancelled");
+    const response = await api.patch(`/bookings/${bookingId}/cancel`);
+    return response.data;
   },
 };
 

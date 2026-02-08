@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middleware/bookingAuth");
+const auth = require("../middleware/bookingAuth"); // Ensure this path matches your auth middleware
 const providerAuth = require("../middleware/providerMiddleware");
 
 const {
@@ -8,6 +8,7 @@ const {
   getProviderBookings,
   getUserBookings,
   updateBookingStatus,
+  cancelBooking, // <--- Imported here
 } = require("../controllers/bookingController");
 
 // User creates a booking
@@ -22,5 +23,8 @@ router.get("/my", auth, getUserBookings);
 // Provider updates booking status
 router.patch("/:bookingId/status", auth, providerAuth, updateBookingStatus);
 
-module.exports = router;
+// Cancel booking (User or Provider)
+// This route was causing the "Undefined" error before because it wasn't in the controller
+router.patch("/:bookingId/cancel", auth, cancelBooking);
 
+module.exports = router;

@@ -942,7 +942,7 @@ export default function MyBookings() {
       </Dialog>
 
       {/* Review Form Dialog */}
-      {reviewBooking && (
+      {/* {reviewBooking && (
         <ReviewForm
           open={!!reviewBooking}
           onOpenChange={(open) => {
@@ -970,7 +970,7 @@ export default function MyBookings() {
             }
           }}
         />
-      )}
+      )} */}
 
       <Footer />
     </div>

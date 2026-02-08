@@ -74,11 +74,11 @@ const ServiceCard = ({ service }: ServiceCardProps) => {
           <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
             {service.category}
           </span>
-          <div className="flex items-center gap-1">
+          {/* <div className="flex items-center gap-1">
             <Star className="w-4 h-4 fill-accent text-accent" />
             <span className="text-sm font-medium text-foreground">{service.rating}</span>
             <span className="text-sm text-muted-foreground">({service.reviews})</span>
-          </div>
+          </div> */}
         </div>
         <h3 className="text-lg font-heading font-semibold text-card-foreground mb-2">
           {service.title}

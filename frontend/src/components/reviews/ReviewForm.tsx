@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,7 +25,7 @@ import { reviewsApi } from "@/services/reviewsApi";
 import { useToast } from "@/hooks/use-toast";
 
 const reviewSchema = z.object({
-  rating: z.number().min(1, "Please select a rating").max(5),
+  rating: z.coerce.number().min(1, "Please select a star rating").max(5),
   comment: z.string().max(500, "Comment must be less than 500 characters").optional(),
 });
 
@@ -37,8 +37,7 @@ interface ReviewFormProps {
   bookingId: string;
   serviceName: string;
   onSuccess?: () => void;
-  // We keep the prop for compatibility, but it won't enforce locking anymore
-  mandatory?: boolean; 
+  mandatory?: boolean;
 }
 
 export const ReviewForm = ({
@@ -59,32 +58,62 @@ export const ReviewForm = ({
     },
   });
 
-  // Simplified: Always allows closing
-  const handleOpenChange = (newOpen: boolean) => {
-    onOpenChange(newOpen);
-  };
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      form.reset({ rating: 0, comment: "" });
+    }
+  }, [open, form]);
 
   const onSubmit = async (values: ReviewFormValues) => {
+    if (!bookingId) {
+      toast({
+        title: "Error",
+        description: "Booking ID is missing. Please refresh the page.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await reviewsApi.addReview({
         bookingId,
         rating: values.rating,
-        comment: values.comment,
+        comment: values.comment || "", // Send empty string if undefined
       });
 
       toast({
         title: "Review submitted",
         description: "Thank you for your feedback!",
+        variant: "default", // Success style
       });
 
       form.reset();
       onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
+      onSuccess?.(); // Notify parent to hide the button
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || error.message || "Failed to submit review.";
+
+      // --- SMART FIX: Handle 'Already Reviewed' gracefully ---
+      if (errorMessage.toLowerCase().includes("already reviewed")) {
+        toast({
+          title: "Already Reviewed",
+          description: "You have already reviewed this service.",
+          variant: "default", // Blue/Neutral style instead of Red/Error
+        });
+        
+        // Treat as success so the parent component hides the button
+        onOpenChange(false);
+        onSuccess?.(); 
+        return;
+      }
+      // -----------------------------------------------------
+
       toast({
-        title: "Failed to submit review",
-        description: error instanceof Error ? error.message : "Please try again",
+        title: "Submission Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -93,16 +122,14 @@ export const ReviewForm = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Rate Your Experience</DialogTitle>
           <DialogDescription>
-            How was your experience with {serviceName}?
+            How was your experience with <span className="font-medium text-foreground">{serviceName}</span>?
           </DialogDescription>
         </DialogHeader>
-
-        {/* Removed the Mandatory Alert here */}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -110,24 +137,27 @@ export const ReviewForm = ({
               control={form.control}
               name="rating"
               render={({ field }) => (
-                <FormItem className="flex flex-col items-center">
+                <FormItem className="flex flex-col items-center gap-2">
                   <FormLabel className="sr-only">Rating</FormLabel>
                   <FormControl>
                     <StarRating
                       rating={field.value}
                       size="lg"
                       interactive
-                      onRatingChange={field.onChange}
+                      onRatingChange={(val) => field.onChange(val)}
                     />
                   </FormControl>
-                  <p className="text-sm text-muted-foreground">
-                    {field.value === 0 && "Select a rating"}
-                    {field.value === 1 && "Poor"}
-                    {field.value === 2 && "Fair"}
-                    {field.value === 3 && "Good"}
-                    {field.value === 4 && "Very Good"}
-                    {field.value === 5 && "Excellent"}
-                  </p>
+                  
+                  {/* Visual feedback for rating */}
+                  <div className="h-6 text-sm font-medium transition-colors">
+                    {field.value === 1 && <span className="text-destructive">Poor 😞</span>}
+                    {field.value === 2 && <span className="text-orange-500">Fair 😐</span>}
+                    {field.value === 3 && <span className="text-yellow-600">Good 🙂</span>}
+                    {field.value === 4 && <span className="text-blue-600">Very Good 😄</span>}
+                    {field.value === 5 && <span className="text-green-600">Excellent 🤩</span>}
+                    {field.value === 0 && <span className="text-muted-foreground">Tap a star to rate</span>}
+                  </div>
+                  
                   <FormMessage />
                 </FormItem>
               )}
@@ -141,31 +171,28 @@ export const ReviewForm = ({
                   <FormLabel>Your Review (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Share your experience..."
+                      placeholder="Share details about your experience..."
                       className="resize-none"
                       rows={4}
                       {...field}
                     />
                   </FormControl>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs text-muted-foreground">
                     <FormMessage />
-                    <p className="text-xs text-muted-foreground">
-                      {field.value?.length || 0}/500
-                    </p>
+                    <span>{field.value?.length || 0}/500</span>
                   </div>
                 </FormItem>
               )}
             />
 
-            <div className="flex gap-3 justify-end">
-              {/* Cancel button is now always visible */}
+            <div className="flex gap-3 justify-end pt-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
               >
-                Skip / Cancel
+                Cancel
               </Button>
               
               <Button type="submit" disabled={isSubmitting}>

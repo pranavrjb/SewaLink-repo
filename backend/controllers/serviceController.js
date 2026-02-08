@@ -36,7 +36,7 @@ exports.getAllServices = async (req, res) => {
 exports.getService = async (req, res) => {
   try {
     const service = await Service.findById(req.params.id)
-      .populate("provider", "name email phone location avatar bio");
+      .populate("provider").populate({path: 'reviews', model: 'Reviews', select: 'rating comment'});
 
     if (!service) {
       return res.status(404).json({ message: "Service not found" });

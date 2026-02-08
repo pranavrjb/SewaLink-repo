@@ -56,9 +56,9 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost" size="icon">
+            {/* <Button variant="ghost" size="icon">
               <Search className="w-5 h-5" />
-            </Button>
+            </Button> */}
 
             {isAuthenticated && user && <NotificationDropdown />}
 

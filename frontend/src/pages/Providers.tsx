@@ -47,21 +47,22 @@ import {
   Plus,
   Loader2,
 } from "lucide-react";
-import { servicesApi, Service } from "@/services/servicesApi";
+import { servicesApi, Service } from "@/services/servicesApi"; // Removed 'Service' import as we map manually
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { set } from "date-fns";
 
+
 interface Provider {
-  providerId: string; 
-  serviceId: string;  
+  providerId: string;
+  serviceId: string;
   name: string;
   ownerName: string;
   avatar: string;
   serviceType: string;
   location: string;
-  rating: number;
-  totalReviews: number;
+  rating: number; 
+  totalReviews: number; 
   completedJobs: number;
   pricePerHour: number;
   isVerified: boolean;
@@ -69,8 +70,6 @@ interface Provider {
   badges: string[];
   description: string;
 }
-
-
 const serviceTypes = [
   "All Services",
   "Plumbing",
@@ -120,7 +119,7 @@ const ProviderCard = ({ provider, isListView = false }: ProviderCardProps) => (
           <Avatar className={`${isListView ? "h-16 w-16" : "h-14 w-14"} border-2 border-primary/20`}>
             <AvatarImage src={provider.avatar} alt={provider.name} />
             <AvatarFallback className="bg-primary text-primary-foreground">
-              {provider.ownerName.split(" ").map((n) => n[0]).join("")}
+              {provider.ownerName ? provider.ownerName.split(" ").map((n) => n[0]).join("") : "U"}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
@@ -137,11 +136,16 @@ const ProviderCard = ({ provider, isListView = false }: ProviderCardProps) => (
         {/* Details */}
         <div className={`space-y-3 ${isListView ? "flex-1" : "mb-4"}`}>
           <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 fill-accent text-accent" />
-              <span className="font-medium">{provider.rating}</span>
+            
+  
+            {/* <div className="flex items-center gap-1">
+              <Star className={`h-4 w-4 ${provider.totalReviews > 0 ? "fill-accent text-accent" : "text-muted-foreground"}`} />
+              <span className="font-medium">
+                {provider.totalReviews > 0 ? provider.rating.toFixed(1) : "New"}
+              </span>
               <span className="text-muted-foreground">({provider.totalReviews})</span>
-            </div>
+            </div> */}
+
             <div className="flex items-center gap-1 text-muted-foreground">
               <MapPin className="h-4 w-4" />
               <span>{provider.location}</span>
@@ -178,16 +182,15 @@ const ProviderCard = ({ provider, isListView = false }: ProviderCardProps) => (
           <span className="text-2xl font-bold text-primary">Rs.{provider.pricePerHour}</span>
           <span className="text-sm text-muted-foreground">/hr</span>
         </div>
-       <Link to={`/provider/${provider.providerId}`}>
-
-          <Button>View Profile</Button>
+        <Link to={`/provider/${provider.providerId}`}>
+          <Button>View Details</Button>
         </Link>
       </div>
     </CardContent>
   </Card>
 );
 
-// Filter Content Component
+// 2. Filter Content Component
 interface FilterContentProps {
   selectedService: string;
   setSelectedService: (value: string) => void;
@@ -251,7 +254,7 @@ const FilterContent = ({
     </div>
 
     {/* Minimum Rating */}
-    <div>
+    {/* <div>
       <label className="text-sm font-medium mb-2 block">
         Minimum Rating: {minRating > 0 ? `${minRating}+ stars` : "Any"}
       </label>
@@ -277,7 +280,7 @@ const FilterContent = ({
           </button>
         ))}
       </div>
-    </div>
+    </div> */}
 
     {/* Price Range */}
     <div>
@@ -308,7 +311,7 @@ const FilterContent = ({
   </div>
 );
 
-// Add Service Form Component
+// 3. Add Service Form Component
 interface AddServiceFormProps {
   onClose: () => void;
   onSuccess: () => void;
@@ -386,6 +389,7 @@ const AddServiceForm = ({ onClose, onSuccess }: AddServiceFormProps) => {
         <Input
           id="phone"
           type="tel"
+          minLength={10}
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           placeholder="e.g., +977 981XXXXXXX"
@@ -474,6 +478,7 @@ const AddServiceForm = ({ onClose, onSuccess }: AddServiceFormProps) => {
   );
 };
 
+// 4. Main Page Component
 export default function Providers() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -491,7 +496,6 @@ export default function Providers() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Handle category from URL params
   useEffect(() => {
     const categoryParam = searchParams.get("category");
     if (categoryParam) {
@@ -499,7 +503,6 @@ export default function Providers() {
     }
   }, [searchParams]);
 
-  // Update URL when service filter changes
   useEffect(() => {
     if (selectedService && selectedService !== "All Services") {
       setSearchParams({ category: selectedService });
@@ -513,29 +516,36 @@ export default function Providers() {
       setIsLoading(true);
       const { services } = await servicesApi.getServices();
      
-      const transformedProviders: Provider[] = services.map((service) => ({
-        providerId: service.provider?._id,
-        serviceId: service._id,
-        name: service.title,
-        ownerName: service.provider?.name || "Unknown Provider",
-        avatar: "",
-        serviceType: service.category,
-        location: service.location || "Kathmandu",
-        rating: service.ratings || 4.5,
-        totalReviews: service.reviewsCount || 0,
-        completedJobs: Math.floor(Math.random() * 200) + 50,
-        pricePerHour: service.price,
-        isVerified: true,
-        responseTime: "Within 2 hours",
-        badges: ["Professional"],
-        description: service.description,
-      }));
+      const transformedProviders: Provider[] = services.map((service: any) => {
+        const serviceReviews = service.reviews || [];
 
-      
+        const totalRatingValue = serviceReviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
+        const calculatedAverage = serviceReviews.length > 0 ? (totalRatingValue / serviceReviews.length) : 0;
+
+        return {
+          providerId: service.provider?._id,
+          serviceId: service._id,
+          name: service.title,
+          ownerName: service.provider?.name || "Unknown Provider",
+          avatar: service.provider?.avatar || "",
+          serviceType: service.category,
+          location: service.location || "Kathmandu",
+          
+          rating: calculatedAverage,
+          totalReviews: serviceReviews.length,
+
+          completedJobs: service.completedJobs || Math.floor(Math.random() * 50),
+          pricePerHour: service.price,
+          isVerified: service.provider?.isVerified || false,
+          responseTime: "Within 2 hours",
+          badges: ["Professional"],
+          description: service.description,
+        };
+      });
+
       setProviders(transformedProviders);
       
-      // Extract unique categories
-      const uniqueCategories = ["All Services", ...new Set(services.map((s) => s.category))];
+      const uniqueCategories = ["All Services", ...new Set(services.map((s: any) => s.category))];
       setCategories(uniqueCategories);
     } catch (error) {
       toast({
@@ -573,11 +583,10 @@ export default function Providers() {
       return matchesSearch && matchesService && matchesLocation && matchesRating && matchesPrice;
     });
 
-    // Sort results
     switch (sortBy) {
-      case "rating":
-        result.sort((a, b) => b.rating - a.rating);
-        break;
+      // case "rating":
+      //   result.sort((a, b) => b.rating - a.rating);
+      //   break;
       case "reviews":
         result.sort((a, b) => b.totalReviews - a.totalReviews);
         break;
@@ -713,7 +722,6 @@ export default function Providers() {
 
               {/* Results Section */}
               <div className="flex-1">
-                {/* Toolbar */}
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
                   <div className="flex items-center gap-4">
                     <p className="text-muted-foreground">
@@ -837,15 +845,15 @@ export default function Providers() {
                         </button>
                       </Badge>
                     )}
-                    {minRating > 0 && (
+                    {/* {minRating > 0 && (
                       <Badge variant="secondary" className="gap-1">
                         {minRating}+ stars
                         <button onClick={() => setMinRating(0)}>
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>
-                    )}
-                    {(priceRange[0] > 500 || priceRange[1] < 5000) && (
+                    )} */}
+                    {(priceRange[0] > 0 || priceRange[1] < 5000) && (
                       <Badge variant="secondary" className="gap-1">
                         Rs.{priceRange[0]} - Rs.{priceRange[1]}/hr
                         <button onClick={() => setPriceRange([500, 5000])}>
@@ -871,7 +879,7 @@ export default function Providers() {
                   >
                     {filteredProviders.map((provider) => (
                       <ProviderCard
-                        key={provider.id}
+                        key={provider.serviceId}
                         provider={provider}
                         isListView={viewMode === "list"}
                       />

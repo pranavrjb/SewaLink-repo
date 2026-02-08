@@ -59,9 +59,8 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
 
-  // 1. Wrap fetch in useCallback so it's stable across renders
+  // Wrap fetch in useCallback so it's stable across renders
   const fetchDashboardData = useCallback(async (showLoader = true) => {
-    // Safety check: Don't fetch if user isn't ready
     if (!user || !user.id) return;
 
     try {
@@ -77,17 +76,17 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
       setBookings(bookingRes?.bookings || []);
 
       // Fetch reviews
-      try {
-        const reviewRes = await reviewsApi.getProviderReviews();
-        setReviews(reviewRes?.reviews || []);
-      } catch (reviewError: any) {
-        console.error("Failed to fetch reviews:", reviewError);
-        setReviews([]); 
-        // Only log 404s if it's strictly necessary for debugging
-        if (reviewError.response?.status !== 404) {
-             console.warn("Review fetch error", reviewError);
-        }
-      }
+      // try {
+      //   const reviewRes = await reviewsApi.getProviderReviews();
+      //   setReviews(reviewRes?.reviews || []);
+      // } catch (reviewError: any) {
+      //   console.error("Failed to fetch reviews:", reviewError);
+      //   setReviews([]); 
+      //   // Only log 404s if it's strictly necessary for debugging
+      //   if (reviewError.response?.status !== 404) {
+      //        console.warn("Review fetch error", reviewError);
+      //   }
+      // }
 
       if (!showLoader) {
         toast({
@@ -102,7 +101,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
         description: error.response?.data?.message || "Failed to load dashboard data",
         variant: "destructive",
       });
-      // Don't clear data on refresh error, keep old data visible
+
       if (showLoader) {
         setBookings([]);
         setReviews([]);
@@ -111,9 +110,8 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [user, toast]); // Dependency on 'user' ensures refetch if user context updates
+  }, [user, toast]);
 
-  // 2. Updated useEffect to depend on fetchDashboardData
   useEffect(() => {
     fetchDashboardData(true);
     
@@ -124,7 +122,6 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
     return () => clearInterval(interval);
   }, [fetchDashboardData]);
 
-  // 3. Use useMemo for heavy filtering logic to improve performance
   const { 
     todaysBookings, 
     completedBookings, 
@@ -223,7 +220,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -263,7 +260,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        {/* <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -275,7 +272,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
               <Star className="w-8 h-8 text-accent fill-accent" />
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -337,7 +334,7 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
           </Card>
 
           {/* Recent Reviews */}
-          <Card>
+          {/* <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Recent Reviews</CardTitle>
@@ -401,12 +398,11 @@ const ProviderDashboard = ({ user }: ProviderDashboardProps) => {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Earnings Overview */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

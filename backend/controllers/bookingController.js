@@ -14,14 +14,10 @@ exports.createBooking = async (req, res) => {
     });
 
     const service = await Service.findById(serviceId).populate("provider", "name");
-    console.log("Service found:", service ? "Yes" : "No");
-    console.log("Provider ID:", service?.provider?._id);
 
     if (service) {
-      console.log("Sending notification to provider:", service.provider._id);
-      
       try {
-        const providerNotif = await sendNotification(service.provider._id, {
+        await sendNotification(service.provider._id, {
           type: "NEW_BOOKING",
           message: `New booking from ${req.user.name} for ${service.title}`,
           bookingId: booking._id,
@@ -30,15 +26,12 @@ exports.createBooking = async (req, res) => {
           preferredDate: booking.preferredDate,
           status: booking.status,
         });
-        console.log("Provider notification created:", providerNotif._id);
       } catch (err) {
         console.error("Provider notification failed:", err);
       }
 
-      console.log("Sending notification to user:", req.user.userId);
-      
       try {
-        const userNotif = await sendNotification(req.user.userId, {
+        await sendNotification(req.user.userId, {
           type: "BOOKING_CONFIRMED",
           message: `Your booking for ${service.title} has been created successfully.`,
           bookingId: booking._id,
@@ -46,7 +39,6 @@ exports.createBooking = async (req, res) => {
           preferredDate: booking.preferredDate,
           status: booking.status,
         });
-        console.log("User notification created:", userNotif._id);
       } catch (err) {
         console.error("User notification failed:", err);
       }
@@ -72,7 +64,7 @@ exports.getProviderBookings = async (req, res) => {
       .populate("user", "name email")
       .sort({ createdAt: -1 });
 
-    const filteredBookings = bookings.filter(b => b.service);
+    const filteredBookings = bookings.filter((b) => b.service);
 
     res.status(200).json({ bookings: filteredBookings });
   } catch (error) {
@@ -83,9 +75,7 @@ exports.getProviderBookings = async (req, res) => {
 
 exports.getUserBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find({ user: req.user.userId })
-      .populate("service");
-
+    const bookings = await Booking.find({ user: req.user.userId }).populate("service");
     res.status(200).json({ bookings });
   } catch (err) {
     console.error("Get user bookings error:", err);
@@ -101,23 +91,18 @@ exports.updateBookingStatus = async (req, res) => {
     const booking = await Booking.findById(bookingId).populate("service");
 
     if (!booking) {
-      console.log("Booking not found");
       return res.status(404).json({ message: "Booking not found" });
     }
 
     if (booking.service.provider.toString() !== providerId.toString()) {
-      console.log("Not authorized");
       return res.status(403).json({ message: "Forbidden" });
     }
 
     booking.status = status;
     await booking.save();
-    console.log("Booking status updated");
 
-    console.log("Sending status update notification to user:", booking.user);
-    
     try {
-      const notif = await sendNotification(booking.user, {
+      await sendNotification(booking.user, {
         type: "BOOKING_STATUS_UPDATED",
         message: `Your booking for ${booking.service.title} is now ${status}.`,
         bookingId: booking._id,
@@ -125,7 +110,6 @@ exports.updateBookingStatus = async (req, res) => {
         preferredDate: booking.preferredDate,
         status: booking.status,
       });
-      console.log("Status update notification created:", notif._id);
     } catch (err) {
       console.error("Status update notification failed:", err);
     }
@@ -136,6 +120,66 @@ exports.updateBookingStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Update booking error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// --- NEW FUNCTION ADDED HERE ---
+exports.cancelBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const userId = req.user.userId; // Extracted from your auth middleware
+
+    // Find the booking and populate service to access provider ID
+    const booking = await Booking.findById(bookingId).populate("service");
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    // Check Authorization: User must be the "Customer" OR the "Provider"
+    const isCustomer = booking.user.toString() === userId.toString();
+    const isProvider = booking.service.provider.toString() === userId.toString();
+
+    if (!isCustomer && !isProvider) {
+      return res.status(403).json({ message: "Not authorized to cancel this booking" });
+    }
+
+    // Prevent cancelling if already completed or cancelled
+    if (["completed", "cancelled", "rejected"].includes(booking.status)) {
+      return res.status(400).json({ message: "Booking cannot be cancelled in its current status" });
+    }
+
+    // Set new status: "rejected" if provider cancels, "cancelled" if user cancels
+    const newStatus = isProvider ? "rejected" : "cancelled";
+    booking.status = newStatus;
+    await booking.save();
+
+    // Send Notification
+    try {
+      // If Customer cancelled -> Notify Provider
+      if (isCustomer) {
+        await sendNotification(booking.service.provider, {
+          type: "BOOKING_CANCELLED",
+          message: `Booking cancelled by customer: ${booking.service.title}`,
+          bookingId: booking._id,
+        });
+      }
+      // If Provider rejected -> Notify Customer
+      else if (isProvider) {
+        await sendNotification(booking.user, {
+          type: "BOOKING_REJECTED",
+          message: `Your booking for ${booking.service.title} was rejected by the provider.`,
+          bookingId: booking._id,
+        });
+      }
+    } catch (notifError) {
+      console.error("Notification failed:", notifError);
+    }
+
+    res.status(200).json({ message: "Booking cancelled successfully", booking });
+  } catch (error) {
+    console.error("Cancel booking error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
