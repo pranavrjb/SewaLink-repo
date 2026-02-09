@@ -61,6 +61,16 @@ import paintingImg from "@/assets/painting.jpg";
 import hvacImg from "@/assets/hvac.jpg";
 import applianceImg from "@/assets/appliance.jpg";
 import pestcontrolImg from "@/assets/pestcontrol.jpg";
+import educationImg from "@/assets/education.jpg";
+import beautyImg from "@/assets/beauty.jpg";
+import cateringImg from "@/assets/catering.jpg";
+import fitnessImg from "@/assets/fitness.jpg";
+import it_supportImg from "@/assets/it_support.jpg";
+import healthcareImg from "@/assets/healthcare.jpg";
+import laundryImg from "@/assets/laundry.jpg";
+import movingImg from "@/assets/moving.jpg";
+import petcareImg from "@/assets/petcare.jpg";
+import securityImg from "@/assets/security.jpg";
 
 const categoryImages: Record<string, string> = {
   plumbing: plumbingImg,
@@ -71,6 +81,16 @@ const categoryImages: Record<string, string> = {
   painting: paintingImg,
   hvac: hvacImg,
   appliance: applianceImg,
+  healthcare: healthcareImg,
+  beauty: beautyImg,
+  education: educationImg,
+  it_support: it_supportImg,
+  security: securityImg,
+  moving: movingImg,
+  petcare: petcareImg,
+  fitness: fitnessImg,
+  catering: cateringImg,
+  laundry: laundryImg,
   pestcontrol: pestcontrolImg,
 };
 
@@ -83,6 +103,16 @@ const categories = [
   "painting",
   "hvac",
   "appliance",
+  "healthcare",
+  "beauty",
+  "education",
+  "IT Support",
+  "security",
+  "moving",
+  "petcare",
+  "fitness",
+  "catering",
+  "laundry",
   "pestcontrol",
 ];
 

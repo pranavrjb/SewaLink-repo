@@ -86,6 +86,16 @@ const categories = [
   "gardening",
   "appliance",
   "pestcontrol",
+   "healthcare",
+  "beauty",
+  "education",
+  "it_support",
+  "security",
+  "moving",
+  "petcare",
+  "fitness",
+  "catering",
+  "laundry",
 ];
 
 const ServiceManagement = () => {

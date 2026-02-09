@@ -18,6 +18,16 @@ import hvacImg from "@/assets/hvac.jpg";
 import gardeningImg from "@/assets/gardening.jpg";
 import pestcontrolImg from "@/assets/pestcontrol.jpg";
 import applianceImg from "@/assets/appliance.jpg";
+import healthcareImg from "@/assets/healthcare.jpg";
+import beautyImg from "@/assets/beauty.jpg";
+import educationImg from "@/assets/education.jpg";
+import it_supportImg from "@/assets/it_support.jpg";
+import securityImg from "@/assets/security.jpg";
+import movingImg from "@/assets/moving.jpg";
+import petcareImg from "@/assets/petcare.jpg";
+import fitnessImg from "@/assets/fitness.jpg";
+import cateringImg from "@/assets/catering.jpg";
+import laundryImg from "@/assets/laundry.jpg";
 
 // Map categories to fallback images
 const categoryImages: Record<string, string> = {
@@ -30,6 +40,31 @@ const categoryImages: Record<string, string> = {
   gardening: gardeningImg,
   pest_control: pestcontrolImg,
   appliance: applianceImg,
+    healthcare: healthcareImg,
+  doctor: healthcareImg,
+  beauty: beautyImg,
+  salon: beautyImg,
+  spa: beautyImg,
+  education: educationImg,
+  tutor: educationImg,
+  tutoring: educationImg,
+  it_support: it_supportImg,
+  it: it_supportImg,
+  tech: it_supportImg,
+  security: securityImg,
+  moving: movingImg,
+  relocation: movingImg,
+  petcare: petcareImg,
+  pet_care: petcareImg,
+  veterinary: petcareImg,
+  fitness: fitnessImg,
+  gym: fitnessImg,
+  yoga: fitnessImg,
+  catering: cateringImg,
+  cooking: cateringImg,
+  chef: cateringImg,
+  laundry: laundryImg,
+  dry_cleaning: laundryImg,
 };
 
 const getServiceImage = (service: ApiService): string => {

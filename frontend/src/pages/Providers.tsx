@@ -47,7 +47,7 @@ import {
   Plus,
   Loader2,
 } from "lucide-react";
-import { servicesApi, Service } from "@/services/servicesApi"; // Removed 'Service' import as we map manually
+import { servicesApi, Service } from "@/services/servicesApi"; 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { set } from "date-fns";
@@ -80,6 +80,16 @@ const serviceTypes = [
   "HVAC",
   "Gardening",
   "Pest Control",
+  "Healthcare",
+  "Beauty",
+  "Education",
+  "IT Support",
+  "Security",
+  "Moving",
+  "Petcare",
+  "Fitness",
+  "Catering",
+  "Laundry",
 ];
 
 const locations = [
